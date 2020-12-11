@@ -1,1 +1,1 @@
-### Çevirilerim
+<a href="https://github.com/qabRieL99/HalfLifeSerisiTurkce"><img src="https://cdn.steamgriddb.com/grid/ccb9b7ccbb6cebc7f0c81a1ec0879cd2.png" alt="HTML tutorial" style="width=460" height="260"></a>  <a href="https://github.com/qabRieL99/TerrariaTurkish"><img src="https://cdn.steamgriddb.com/grid/b70188491798e86129a57180426213ff.png" alt="HTML tutorial" style="width=460" height="260"></a>
