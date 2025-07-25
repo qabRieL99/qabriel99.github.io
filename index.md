@@ -13,3 +13,6 @@
 
 ### Half-Life: Combine OverWiki çevirilerim:
 https://combineoverwiki.net/wiki/User:QabRieL
+
+### Half-Life: Map Selector:
+https://combineoverwiki.net/wiki/User:QabRieL/selector.html
