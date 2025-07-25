@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Map Selector</title>
+    <style>
+        :root {
+            --bg-color: #ffffff;
+            --text-color: #333333;
+            --input-bg: #f4f4f4;
+            --border-color: #ddd;
+            --hover-color: #e9e9e9;
+            --active-color: #3388ff;
+            --code-bg: #f4f4f4;
+            --game-separator: #eaeaea;
+            --button-bg: #4CAF50;
+            --button-text: white;
+            --highlight-color: #ffde59;
+        }
+
+        .dark-mode {
+            --bg-color: #222;
+            --text-color: #e0e0e0;
+            --input-bg: #333;
+            --border-color: #555;
+            --hover-color: #444;
+            --active-color: #5599ff;
+            --code-bg: #2d2d2d;
+            --game-separator: #444;
+            --button-bg: #388E3C;
+            --button-text: #f0f0f0;
+            --highlight-color: #ff9800;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .container {
+            max-width: 650px;
+            margin: auto;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            background-color: var(--bg-color);
+        }
+
+        h1 {
+            margin-top: 0;
+            color: var(--text-color);
+        }
+
+        label {
+            display: block;
+            margin-top: 15px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .search-container {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        select, button, input {
+            margin: 10px 0;
+            padding: 12px;
+            font-size: 16px;
+            border-radius: 4px;
+            border: 1px solid var(--border-color);
+            background-color: var(--input-bg);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        select {
+            width: 100%;
+            cursor: pointer;
+        }
+
+        button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        .code-output {
+            font-family: monospace;
+            background-color: var(--code-bg);
+            padding: 15px;
+            border: 1px solid var(--border-color);
+            margin-top: 20px;
+            overflow-x: auto;
+            border-radius: 4px;
+            color: var(--text-color);
+        }
+
+        #copyButton {
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        #copyButton.fade-out {
+            opacity: 0;
+        }
+
+        #copyButton.fade-in {
+            opacity: 1;
+        }
+
+        /* Autocomplete styles */
+        .autocomplete-container {
+            position: relative;
+            width: 100%;
+        }
+
+        #searchInput {
+            width: 100%;
+            padding: 12px;
+            font-size: 16px;
+            box-sizing: border-box;
+            border-radius: 4px;
+        }
+
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid var(--border-color);
+            z-index: 99;
+            width: 100%;
+            left: 0;
+            right: 0;
+            box-shadow: 0px 4px 12px rgba(0,0,0,0.2);
+            max-height: 350px;
+            overflow-y: auto;
+            background-color: var(--bg-color);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .game-header {
+            padding: 8px 10px;
+            background-color: var(--game-separator);
+            font-weight: bold;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+
+        .game-icon {
+            width: 24px;
+            height: 24px;
+            vertical-align: middle;
+            margin-right: 8px;
+        }
+
+        .item-container {
+            padding: 12px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .item-container:hover {
+            background-color: var(--hover-color);
+        }
+
+        .item-content {
+            flex-grow: 1;
+        }
+
+        .autocomplete-active {
+            background-color: var(--active-color) !important;
+            color: white;
+        }
+
+        .map-info {
+            font-size: 12px;
+            color: var(--text-color);
+            opacity: 0.75;
+            margin-top: 2px;
+        }
+
+        .clear-button {
+            background-color: var(--button-bg);
+            color: var(--button-text);
+            border: none;
+            border-radius: 50%;
+            width: 30px;
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0;
+            margin: 0;
+        }
+
+        .highlight {
+            background-color: var(--highlight-color);
+            color: #000;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .chapter-group {
+            font-weight: bold;
+            padding-left: 8px;
+            background-color: var(--game-separator);
+        }
+
+        .theme-switch {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            align-items: center;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 60px;
+            height: 30px;
+            margin-left: 10px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 30px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 22px;
+            width: 22px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--active-color);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(30px);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Half-Life Map Codes</h1>
+        
+        <div class="theme-switch">
+            <span>Dark Mode</span>
+            <label class="switch">
+                <input type="checkbox" id="darkModeToggle">
+                <span class="slider"></span>
+            </label>
+        </div>
+        
+        <label for="searchInput">Search for a map:</label>
+        <div class="search-container">
+            <div class="autocomplete-container">
+                <input type="text" id="searchInput" placeholder="Enter map name, chapter or location (min. 2 characters)" autocomplete="off">
+                <div id="autocompleteList" class="autocomplete-items"></div>
+            </div>
+            <button class="clear-button" id="clearSearch" title="Clear search">×</button>
+        </div>
+        
+        <label for="gameSelect">Select a game:</label>
+        <select id="gameSelect" onchange="populateMaps()">
+            <option value="">-- Select a game --</option>
+            <option value="Half-Life">Half-Life</option>
+            <option value="Half-Life: Opposing Force">Half-Life: Opposing Force</option>
+            <option value="Half-Life: Blue Shift">Half-Life: Blue Shift</option>
+            <option value="Half-Life 2">Half-Life 2</option>
+            <option value="Half-Life 2: Episode One">Half-Life 2: Episode One</option>
+            <option value="Half-Life 2: Episode Two">Half-Life 2: Episode Two</option>
+            <option value="Half-Life: Alyx">Half-Life: Alyx</option>
+        </select>
+
+        <label for="mapSelect">Select a map:</label>
+        <select id="mapSelect" onchange="displayCode()">
+            <option value="">-- Select a map --</option>
+        </select>    
+
+        <div class="code-output" id="codeOutput">Select a map to view the code.</div>
+        <button id="copyButton" onclick="copyCode()">Copy Code</button>
+    </div>
+
+    <script>
+        // Game data with map codes, chapters, chapter numbers, and locations
+        const gameData = {
+			"Half-Life": {
+				"t0a0":		{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0a":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0b":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0b1":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0b2":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0c":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				"t0a0d":	{ "chapter": "Hazard Course (optional)", "chapterNum":0, "location": "Black Mesa Training Facility" },
+				
+				"c0a0":		{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				"c0a0a":	{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				"c0a0b":	{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				"c0a0c":	{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				"c0a0d":	{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				"c0a0e":	{ "chapter": "Black Mesa Inbound", "chapterNum": 1, "location": "Sector C Line" },
+				
+				"c1a0":		{ "chapter": "Anomalous Materials", "chapterNum": 2, "location": "Anomalous Materials Laboratory" },
+				"c1a0a":	{ "chapter": "Anomalous Materials", "chapterNum": 2, "location": "Anomalous Materials Laboratory" },
+				"c1a0b":	{ "chapter": "Anomalous Materials", "chapterNum": 2, "location": "Anomalous Materials Laboratory" },
+				"c1a0d":	{ "chapter": "Anomalous Materials", "chapterNum": 2, "location": "Anomalous Materials Laboratory" },
+				"c1a0e":	{ "chapter": "Anomalous Materials", "chapterNum": 2, "location": "Anomalous Materials Laboratory" },
+				
+				"c1a0c":	{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Anomalous Materials Laboratory" },
+				"c1a1":		{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Anomalous Materials Laboratory" },
+				"c1a1a":	{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Anomalous Materials Laboratory" },
+				"c1a1f":		{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Anomalous Materials Laboratory" },
+				"c1a1b":	{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Coolant Reservoir Facility" },
+				"c1a1c":		{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Coolant Reservoir Facility" },
+				"c1a1d":	{ "chapter": "Unforeseen Consequences", "chapterNum": 3, "location": "Coolant Reservoir Facility" },
+				
+				"c1a2":		{ "chapter": "Office Complex", "chapterNum": 4, "location": "Administration Center" },
+				"c1a2a":	{ "chapter": "Office Complex", "chapterNum": 4, "location": "Administration Center" },
+				"c1a2b":	{ "chapter": "Office Complex", "chapterNum": 4, "location": "Administration Center" },
+				"c1a2c":	{ "chapter": "Office Complex", "chapterNum": 4, "location": "Administration Center" },
+				"c1a2d":	{ "chapter": "Office Complex", "chapterNum": 4, "location": "Administration Center" },
+				
+				"c1a3":		{ "chapter": "\"We've Got Hostiles\"", "chapterNum": 5, "location": "High Security Materials Storage Area" },
+				"c1a3a":	{ "chapter": "\"We've Got Hostiles\"", "chapterNum": 5, "location": "High Security Materials Storage Area" },
+				"c1a3b":	{ "chapter": "\"We've Got Hostiles\"", "chapterNum": 5, "location": "High Security Materials Storage Area" },
+				"c1a3c":	{ "chapter": "\"We've Got Hostiles\"", "chapterNum": 5, "location": "High Security Materials Storage Area" },
+				"c1a3d":	{ "chapter": "\"We've Got Hostiles\"", "chapterNum": 5, "location": "High Security Materials Storage Area" },
+				
+				"c1a4":		{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4b":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4d":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4e":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4f":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4g":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4i":		{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4j":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				"c1a4k":	{ "chapter": "Blast Pit", "chapterNum": 6, "location": "Silo D" },
+				
+				"c2a1":		{ "chapter": "Power Up", "chapterNum": 7, "location": "Track Control" },
+				"c2a1a":	{ "chapter": "Power Up", "chapterNum": 7, "location": "Track Control" },
+				"c2a1b":	{ "chapter": "Power Up", "chapterNum": 7, "location": "Track Control" },
+				
+				"c2a2":		{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2a":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2b1":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2b2":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2c":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2d":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2e":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2f":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2g":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "Materials Transport" },
+				"c2a2h":	{ "chapter": "On A Rail", "chapterNum": 8, "location": "High Altitude Launch Center" },
+				
+				"c2a3":		{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				"c2a3a":	{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				"c2a3b":	{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				"c2a3c":	{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				"c2a3d":	{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				"c2a3e":	{ "chapter": "Apprehension", "chapterNum": 9, "location": "Unnamed Industrial Area" },
+				
+				"c2a4":		{ "chapter": "Residue Processing", "chapterNum": 10, "location": "Biological Waste Processing Plant" },
+				"c2a4a":	{ "chapter": "Residue Processing", "chapterNum": 10, "location": "Biological Waste Processing Plant" },
+				"c2a4b":	{ "chapter": "Residue Processing", "chapterNum": 10, "location": "Biological Waste Processing Plant" },
+				"c2a4c":	{ "chapter": "Residue Processing", "chapterNum": 10, "location": "Biological Waste Processing Plant" },
+				
+				"c2a4d":	{ "chapter": "Questionable Ethics", "chapterNum": 11, "location": "Advanced Biological Research Lab" },
+				"c2a4e":	{ "chapter": "Questionable Ethics", "chapterNum": 11, "location": "Advanced Biological Research Lab" },
+				"c2a4f":	{ "chapter": "Questionable Ethics", "chapterNum": 11, "location": "Advanced Biological Research Lab" },
+				"c2a4g":	{ "chapter": "Questionable Ethics", "chapterNum": 11, "location": "Advanced Biological Research Lab" },
+				
+				"c2a5":		{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Hydro Plant" },
+				"c2a5a":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Black Mesa desert" },
+				"c2a5w":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Black Mesa desert" },
+				"c2a5x":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Black Mesa desert" },
+				"c2a5b":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Motorpool" },
+				"c2a5c":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Motorpool" },
+				"c2a5d":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Motorpool" },
+				"c2a5e":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Motorpool" },
+				"c2a5f":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Topside Motorpool" },
+				"c2a5g":	{ "chapter": "Surface Tension", "chapterNum": 12, "location": "Waste Processing Area 3" },
+				
+				"c3a1":		{ "chapter": "\"Forget About Freeman!\"", "chapterNum": 13, "location": "Lambda Bunker" },
+				"c3a1a":	{ "chapter": "\"Forget About Freeman!\"", "chapterNum": 13, "location": "Lambda Bunker" },
+				"c3a1b":	{ "chapter": "\"Forget About Freeman!\"", "chapterNum": 13, "location": "Lambda Bunker" },
+				
+				"c3a2e":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Hazardous Materials Handling Bays" },
+				"c3a2":		{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Hazardous Materials Handling Bays" },
+				"c3a2a":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Lambda Reactor Coolant System" },
+				"c3a2b":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Lambda Reactor Coolant System" },
+				"c3a2c":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Lambda Reactor" },
+				"c3a2d":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Lambda Reactor" },
+				"c3a2f":	{ "chapter": "Lambda Core ", "chapterNum": 14, "location": "Lambda Reactor" },
+				
+				"c4a1":		{ "chapter": "Xen", "chapterNum": 15, "location": "Xen" },
+				
+				"c4a2":		{"chapter": "Gonarch's Lair", "chapterNum": 16, "location": "Xen" },
+				"c4a2a":	{ "chapter": "Gonarch's Lair", "chapterNum": 16, "location": "Xen" },
+				"c4a2b":	{ "chapter": "Gonarch's Lair", "chapterNum": 16, "location": "Xen" },
+				
+				"c4a1a":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Xen" },
+				"c4a1b":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Xen" },
+				"c4a1c":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Mines" },
+				"c4a1d":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Mines" },
+				"c4a1e":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Mines" },
+				"c4a1f":	{ "chapter": "Interloper", "chapterNum": 17, "location": "Mines" },
+				
+				"c4a3":		{ "chapter": "Nihilanth", "chapterNum": 18, "location": "Xen" },
+				
+				"c5a1":		{ "chapter": "Endgame", "chapterNum":0, "location": "Unknown" }
+				},
+
+            "Half-Life: Blue Shift":{
+                "ba_hazard1": 		{ "chapter": "Hazard Course (optional)", "chapterNum": 0, "location": "Black Mesa Training Facility" },
+				"ba_hazard2":		{ "chapter": "Hazard Course (optional)", "chapterNum": 0,  "location": "Black Mesa Training Facility" },
+				"ba_hazard3":		{ "chapter": "Hazard Course (optional)", "chapterNum": 0,  "location": "Black Mesa Training Facility" },
+				"ba_hazard4":		{ "chapter": "Hazard Course (optional)",  "chapterNum": 0, "location": "Black Mesa Training Facility" },
+				"ba_hazard5":		{ "chapter": "Hazard Course (optional)",  "chapterNum": 0, "location": "Black Mesa Training Facility" },
+				"ba_hazard6":		{ "chapter": "Hazard Course (optional)",  "chapterNum": 0, "location": "Black Mesa Training Facility" },
+				
+				"ba_tram1":			{ "chapter": "Living Quarters Outbound", "chapterNum": 1, "location": "Area 8 Topside Dormitories" },
+				"ba_tram2":			{ "chapter": "Living Quarters Outbound", "chapterNum": 1, "location": "Sector C Line" },
+				"ba_tram3":			{ "chapter": "Living Quarters Outbound", "chapterNum": 1, "location": "Sector C Line" },
+				
+				"ba_security1":	{ "chapter": "Insecurity", "chapterNum": 2, "location": "Area 3 Security Facilities" },
+				"ba_security2":	{ "chapter": "Insecurity", "chapterNum": 2, "location": "Area 3 Security Facilities" },
+				"ba_maint":			{ "chapter": "Insecurity", "chapterNum": 2, "location": "H-E Particle Labs" },
+				"ba_elevator":		{ "chapter": "Insecurity", "chapterNum": 2, "location": "Main Access Lift" },
+				
+				"ba_canal1":			{ "chapter": "Duty Calls", "chapterNum": 3, "location": "Small Materials Storage Area" },
+				"ba_canal1b":		{ "chapter": "Duty Calls", "chapterNum": 3, "location": "Small Materials Storage Area" },
+				"ba_canal2":		{ "chapter": "Duty Calls", "chapterNum": 3, "location": "Small Materials Storage Area" },
+				"ba_canal3":		{ "chapter": "Duty Calls", "chapterNum": 3, "location": "Small Materials Storage Area" },
+				
+				"ba_yard1":			{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard2":			{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard3a":		{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard3b":		{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard3":			{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard4":			{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard4a":		{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard5":			{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				"ba_yard5a":		{ "chapter": "Captive Freight", "chapterNum": 4, "location": "Freight Yard" },
+				
+				"ba_teleport1":		{ "chapter": "Focal Point", "chapterNum": 5, "location": "Section A-17 Prototype Labs" },
+				"ba_teleport2":	{ "chapter": "Focal Point", "chapterNum": 5, "location": "Section A-17 Prototype Labs" },
+				"ba_xen1":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				"ba_xen2":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				"ba_xen3":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				"ba_xen4":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				"ba_xen5":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				"ba_xen6":			{ "chapter": "Focal Point", "chapterNum": 5, "location": "Xen" },
+				
+				"ba_power1":		{ "chapter": "Power Struggle", "chapterNum": 6, "location": "Section A-17 Prototype Labs" },
+				"ba_power2":		{ "chapter": "Power Struggle", "chapterNum": 6, "location": "Section A-17 Prototype Labs" },
+				
+				"ba_outro":			{ "chapter": "Deliverance", "chapterNum": 8, "location": "Black Mesa South Access Tunnel" }
+            },
+            
+            "Half-Life: Opposing Force": {
+				"ofboot0":	{ "chapter": "Boot Camp (optional)", "chapterNum": 0, "location": "Santego Military Base" },
+				"ofboot1":		{ "chapter": "Boot Camp (optional)", "chapterNum": 0, "location": "Santego Military Base" },
+				"ofboot2":	{ "chapter": "Boot Camp (optional)", "chapterNum": 0, "location": "Santego Military Base" },
+				"ofboot3":	{ "chapter": "Boot Camp (optional)", "chapterNum": 0, "location": "Santego Military Base" },
+				"ofboot4":	{ "chapter": "Boot Camp (optional)", "chapterNum": 0, "location": "Santego Military Base" },
+				
+				"of0a0":		{ "chapter": "Incoming", "chapterNum": 1, "location": "Black Mesa Desert" },
+				
+				"of1a1":			{ "chapter": "Welcome To Black Mesa", "chapterNum": 2, "location": "Black Mesa Medical Lab" },
+				"of1a2":		{ "chapter": "Welcome To Black Mesa", "chapterNum": 2, "location": "Black Mesa Transit System" },
+				"of1a3":		{ "chapter": "Welcome To Black Mesa", "chapterNum": 2, "location": "Black Mesa Transit System" },
+				"of1a4":		{ "chapter": "Welcome To Black Mesa", "chapterNum": 2, "location": "Black Mesa Transit System" },
+				"of1a4b":		{ "chapter": "Welcome To Black Mesa", "chapterNum": 2, "location": "Black Mesa Transit System" },
+				
+				"of1a5":		{ "chapter": "\"We Are Pulling Out\"", "chapterNum": 3, "location": "Black Mesa Transit System" },
+				"of1a5b":		{ "chapter": "\"We Are Pulling Out\"", "chapterNum": 3, "location": "Black Mesa Transit System" },
+				"of1a6":		{ "chapter": "\"We Are Pulling Out\"", "chapterNum": 3, "location": "Black Mesa Transit System" },
+				
+				"of2a1":		{ "chapter": "Missing in Action","chapterNum": 4, "location": "Sector E" },
+				"of2a1b":		{ "chapter": "Missing in Action","chapterNum": 4, "location": "Sector E" },
+				"of2a2":		{ "chapter": "Missing in Action","chapterNum": 4, "location": "Sector E" },
+				"of2a3":		{ "chapter": "Missing in Action","chapterNum": 4, "location": "Sector E" },
+				
+				"of2a4":		{ "chapter": "Friendly Fire", "chapterNum": 5, "location": "Lambda Sector Transport" },
+				"of2a5":		{ "chapter": "Friendly Fire", "chapterNum": 5, "location": "Lambda Sector Transport" },
+				"of2a6":		{ "chapter": "Friendly Fire", "chapterNum": 5, "location": "Lambda Sector Transport" },
+				
+				"of3a1":		{ "chapter": "We Are Not Alone", "chapterNum": 6, "location": "Lambda Reactor" },
+				"of3a1b":		{ "chapter": "We Are Not Alone", "chapterNum": 6, "location": "Xen" },
+				"of3a2":		{ "chapter": "We Are Not Alone", "chapterNum": 6, "location": "Xen" },
+				
+				"of3a4":		{ "chapter": "Crush Depth", "chapterNum": 7, "location": "Hydrofauna Studies Laboratory" },
+				"of3a5":		{ "chapter": "Crush Depth", "chapterNum": 7, "location": "Hydrofauna Studies Laboratory" },
+				"of3a6":		{ "chapter": "Crush Depth", "chapterNum": 7, "location": "Hydrofauna Studies Laboratory" },
+				
+				"of4a1":		{ "chapter": "Vicarious Reality", "chapterNum": 8, "location": "Black Mesa Biodome Complex" },
+				"of4a2":		{ "chapter": "Vicarious Reality", "chapterNum": 8, "location": "Black Mesa Biodome Complex" },
+				"of4a3":		{ "chapter": "Vicarious Reality", "chapterNum": 8, "location": "Black Mesa Biodome Complex" },
+				
+				"of4a4":		{ "chapter": "Pit Worm's Nest", "chapterNum": 9, "location": "Waste Processing Area 3" },
+				"of4a5":		{ "chapter": "Pit Worm's Nest", "chapterNum": 9, "location": "Waste Processing Area 3" },
+				
+				"of5a1":		{ "chapter": "Foxtrot Uniform", "chapterNum": 10, "location": "Freight Hangars" },
+				"of5a2":		{ "chapter": "Foxtrot Uniform", "chapterNum": 10, "location": "Freight Hangars" },
+				"of5a3":		{ "chapter": "Foxtrot Uniform", "chapterNum": 10, "location": "Freight Hangars" },
+				"of5a4":		{ "chapter": "Foxtrot Uniform", "chapterNum": 10, "location": "Topside Hydro Plant" },
+				
+				"of6a1":		{ "chapter": "\"The Package", "chapterNum\"": 11, "location": "Black Mesa Desert" },
+				"of6a2":		{ "chapter": "\"The Package", "chapterNum\"": 11, "location": "Ordinance Storage Facility" },
+				"of6a3":		{ "chapter": "\"The Package", "chapterNum\"": 11, "location": "Ordinance Storage Facility" },
+				"of6a4":		{ "chapter": "\"The Package", "chapterNum\"": 11, "location": "Parking Garage" },
+				
+				"of6a4b":		{ "chapter": "Worlds Collide", "chapterNum": 12, "location": "Level 4 Storage Unit" },
+				"of6a5":		{ "chapter": "Worlds Collide", "chapterNum": 12, "location": "Level 4 Storage Unit" },
+				
+                "of7a0":		{ "chapter": "Conclusion", "chapterNum": 0, "location": "Osprey Heliplane" }
+            },
+            
+            "Half-Life 2": {
+                "d1_trainstation_01":	{ "chapter": "Point Insertion", "chapterNum": 1, "location": "City 17 Trainstation" },
+				"d1_trainstation_02":	{ "chapter": "Point Insertion", "chapterNum": 1, "location": "City 17 Trainstation" },
+				"d1_trainstation_03":	{ "chapter": "Point Insertion", "chapterNum": 1, "location": "City 17 Trainstation" },
+				"d1_trainstation_04":	{ "chapter": "Point Insertion", "chapterNum": 1, "location": "City 17 Trainstation" },
+				
+				"d1_trainstation_05":	{ "chapter": "\"A Red Letter Day\"", "chapterNum": 2,  "location": "Kleiner's Lab" },
+				"d1_trainstation_06":	{ "chapter": "\"A Red Letter Day\"", "chapterNum": 2,  "location": "Kleiner's Lab" },
+				
+				"d1_canals_01":			{ "chapter": "Route Kanal", "chapterNum": 3, "location": "Canals" },
+				"d1_canals_01a":			{ "chapter": "Route Kanal", "chapterNum": 3, "location": "Station 1" },
+				"d1_canals_02":			{ "chapter": "Route Kanal", "chapterNum": 3, "location": "Station 1" },
+				"d1_canals_03":			{ "chapter": "Route Kanal", "chapterNum": 3, "location": "Unnamed station" },
+				"d1_canals_05":			{ "chapter": "Route Kanal", "chapterNum": 3, "location": "Station 6" },
+				
+				"d1_canals_06":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Station 7" },
+				"d1_canals_07":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "APC garage" },
+				"d1_canals_08":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Gate 5" },
+				"d1_canals_09":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Canals" },
+				"d1_canals_10":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Canals" },
+				"d1_canals_11":				{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Canals" },
+				"d1_canals_12":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Canals" },
+				"d1_canals_13":			{ "chapter": "Water Hazard", "chapterNum": 4, "location": "Canals" },
+				
+				"d1_eli_01":					{ "chapter": "Black Mesa East", "chapterNum": 5, "location": "Black Mesa East" },
+				"d1_eli_02":					{ "chapter": "Black Mesa East", "chapterNum": 5, "location": "Black Mesa East" },
+				
+				"d1_town_01":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_01a":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_02":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_02a":			{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_03":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_04":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				"d1_town_05":				{ "chapter": "We Don't Go To Ravenholm", "chapterNum": 6, "location": "Ravenholm" },
+				
+				"d2_coast_01":				{ "chapter": "Highway 17", "chapterNum": 7, "location": "Shorepoint Base" },
+				"d2_coast_03":				{ "chapter": "Highway 17", "chapterNum": 7, "location": "New Little Odessa" },
+				"d2_coast_04":			{ "chapter": "Highway 17", "chapterNum": 7, "location": "Dock 137" },
+				"d2_coast_05":			{ "chapter": "Highway 17", "chapterNum": 7, "location": "Petroleum Station" },
+				"d2_coast_07":				{ "chapter": "Highway 17", "chapterNum": 7, "location": "Bridge Point" },
+				"d2_coast_08":			{ "chapter": "Highway 17", "chapterNum": 7, "location": "Bridge Point" },
+				
+				"d2_coast_09":				{ "chapter": "Sandtraps", "chapterNum": 8, "location": "Coast" },
+				"d2_coast_10":				{ "chapter": "Sandtraps", "chapterNum": 8, "location": "Lighthouse Point" },
+				"d2_coast_11":				{ "chapter": "Sandtraps", "chapterNum": 8, "location": "Vortigaunt Camp" },
+				"d2_coast_12":				{ "chapter": "Sandtraps", "chapterNum": 8, "location": "Coast" },
+				"d2_prison_01":			{ "chapter": "Sandtraps", "chapterNum": 8, "location": "Nova Prospekt" },
+
+				"d2_prison_02":			{ "chapter": "Nova Prospekt", "chapterNum": 9, "location": "Nova Prospekt" },
+				"d2_prison_03":			{ "chapter": "Nova Prospekt", "chapterNum": 9, "location": "Nova Prospekt" },
+				"d2_prison_04":			{ "chapter": "Nova Prospekt", "chapterNum": 9, "location": "Nova Prospekt" },
+				"d2_prison_05":			{ "chapter": "Nova Prospekt", "chapterNum": 9, "location": "Nova Prospekt" },
+				
+				//manually add 9a
+				"d2_prison_06":			{ "chapter": "Entanglement", "chapterNum": 9, "location": "Depot" },
+				"d2_prison_07":			{ "chapter": "Entanglement", "chapterNum": 9, "location": "Depot" },
+				"d2_prison_08":			{ "chapter": "Entanglement", "chapterNum": 9, "location": "Depot" },
+				"d3_c17_01":					{ "chapter": "Entanglement", "chapterNum": 9, "location": "Kleiner's Lab" },
+
+				"d3_c17_02":					{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "Kleiner's Lab" },
+				"d3_c17_03":					{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_04":				{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_05":				{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_06a":				{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_06b":				{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_07":					{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				"d3_c17_08":				{ "chapter": "Anticitizen One", "chapterNum": 10, "location": "City 17" },
+				
+				"d3_c17_09":				{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_10a":				{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_10b":				{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_11":					{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_12":					{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_12b":				{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				"d3_c17_13":					{ "chapter": "\"Follow Freeman!\"", "chapterNum": 11, "location": "Overwatch Nexus" },
+				
+				"d3_citadel_01":			{ "chapter": "Our Benefactors", "chapterNum": 12, "location": "Citadel" },
+				"d3_citadel_02":			{ "chapter": "Our Benefactors", "chapterNum": 12, "location": "Citadel" },
+				"d3_citadel_03":			{ "chapter": "Our Benefactors", "chapterNum": 12, "location": "Citadel" },
+				"d3_citadel_04":			{ "chapter": "Our Benefactors", "chapterNum": 12, "location": "Citadel" },
+				"d3_citadel_05":			{ "chapter": "Our Benefactors", "chapterNum": 12, "location": "Citadel" },
+				
+				"d3_breen_01":				{ "chapter": "Dark Energy", "chapterNum": 13, "location": "Citadel" } 
+            },
+            
+            "Half-Life 2: Episode One" : {
+                "ep1_citadel_00":		{ "chapter": "Undue Alarm", "chapterNum": 1, "location": "Citadel" },
+				"ep1_citadel_01":		{ "chapter": "Undue Alarm", "chapterNum": 1, "location": "Citadel" },
+				"ep1_citadel_02":		{ "chapter": "Undue Alarm", "chapterNum": 1, "location": "Citadel" },
+				"ep1_citadel_02b":	{ "chapter": "Undue Alarm", "chapterNum": 1, "location": "Citadel" },
+				
+				"ep1_citadel_03":	{ "chapter": "Direct Intervention", "chapterNum": 2, "location": "Citadel Core" },
+				"ep1_citadel_04":	{ "chapter": "Direct Intervention", "chapterNum": 2, "location": "Citadel" },
+
+				"ep1_c17_00":		{ "chapter": "Lowlife", "chapterNum": 3, "location": "City 17 Underground" },
+				"ep1_c17_00a":		{ "chapter": "Lowlife", "chapterNum": 3, "location": "City 17 Underground" },
+				
+				"ep1_c17_01":			{ "chapter": "Urban Flight", "chapterNum": 4, "location": "Hospital" },
+				"ep1_c17_01a":			{ "chapter": "Urban Flight", "chapterNum": 4, "location": "Hospital" },
+				"ep1_c17_02":			{ "chapter": "Urban Flight", "chapterNum": 4, "location": "Hospital" },
+				"ep1_c17_02a":			{ "chapter": "Urban Flight", "chapterNum": 4, "location": "Hospital" },
+				"ep1_c17_02b":			{ "chapter": "Urban Flight", "chapterNum": 4, "location": "Hospital" },
+				
+				"ep1_c17_05":			{ "chapter": "Exit 17", "chapterNum": 5, "location": "Technical Trainstation" },
+				"ep1_c17_06":			{ "chapter": "Exit 17", "chapterNum": 5, "location": "Technical Trainstation" }
+            },
+            
+            "Half-Life 2: Episode Two": {
+			    "ep2_outland_01":	{ "chapter": "To The White Forest", "chapterNum": 1, "location": "Victory Mine" },
+				"ep2_outland_01a":	{ "chapter": "To The White Forest", "chapterNum": 1, "location": "Victory Mine" },
+
+				"ep2_outland_02":	{ "chapter": "This Vortal Coil", "chapterNum": 2, "location": "Victory Mine" },				
+				"ep2_outland_03":	{ "chapter": "This Vortal Coil", "chapterNum": 2, "location": "Victory Mine" },
+				"ep2_outland_04":	{ "chapter": "This Vortal Coil", "chapterNum": 2, "location": "Victory Mine" },
+				
+				"ep2_outland_05":	{ "chapter": "Freeman Pontifex", "chapterNum": 3, "location": "Victory Mine" },
+				"ep2_outland_06":	{ "chapter": "Freeman Pontifex", "chapterNum": 3, "location": "Victory Mine" },
+				
+				"ep2_outland_06a":	{ "chapter": "Riding Shotgun", "chapterNum": 4, "location": "Radio Tower settlement" },
+				"ep2_outland_07":	{ "chapter": "Riding Shotgun", "chapterNum": 4, "location": "The Outlands" },
+				"ep2_outland_08":	{ "chapter": "Riding Shotgun", "chapterNum": 4, "location": "Station 21" },
+	
+				"ep2_outland_09":	{ "chapter": "Under the Radar", "chapterNum": 5, "location": "Station 21" },
+                "ep2_outland_10":	{ "chapter": "Under the Radar", "chapterNum": 5, "location": "White Forest Inn" },
+                "ep2_outland_10a":	{ "chapter": "Under the Radar", "chapterNum": 5, "location": "The Outlands" },
+				
+				"ep2_outland_11":	{ "chapter": "Our Mutual Fiend", "chapterNum": 6, "location": "White Forest" },
+				"ep2_outland_11a":	{ "chapter": "Our Mutual Fiend", "chapterNum": 6, "location": "White Forest" },
+				"ep2_outland_11b":	{ "chapter": "Our Mutual Fiend", "chapterNum": 6, "location": "White Forest" },
+				"ep2_outland_12":	{ "chapter": "Our Mutual Fiend", "chapterNum": 6, "location": "White Forest" },
+				
+				"ep2_outland_12a":	{ "chapter": "T-Minus One", "chapterNum": 7, "location": "White Forest" }
+            },
+            
+            "Half-Life: Alyx": {
+			    "a1_intro_world":						{ "chapter": "Entanglement", "chapterNum": 1, "location": "Alyx's Hideout" },
+			    "a1_intro_world_2":					{ "chapter": "Entanglement", "chapterNum": 1, "location": "Russell's Lab" },
+				
+				"a2_quarantine_entrance":		{ "chapter": "The Quarantine Zone", "chapterNum": 2, "location": "Quarantine Zone" },
+				"a2_pistol":								{ "chapter": "The Quarantine Zone", "chapterNum": 2, "location": "Metro Area" },
+				"a2_hideout":							{ "chapter": "The Quarantine Zone", "chapterNum": 2, "location": "Vortigaunt Hideout" },
+				
+				"a2_headcrabs_tunnel":			{ "chapter": "Is Or Will Be", "chapterNum": 3, "location": "Drainage Tunnels" },
+				"a2_drainage":							{ "chapter": "Is Or Will Be", "chapterNum": 3, "location": "Drainage Tunnels" },
+				"a2_train_yard":						{ "chapter": "Is Or Will Be", "chapterNum": 3, "location": "Fairview Junction" },
+				
+				"a3_station_street":				{ "chapter": "Superweapon", "chapterNum": 4, "location": "Terminal Gardens"},
+				
+				"a3_hotel_lobby_basement":	{ "chapter": "The Northern Star", "chapterNum": 5, "location": "Northern Star" },
+				"a3_hotel_underground_pit":	{ "chapter": "The Northern Star", "chapterNum": 5, "location": "Northern Star" },
+				"a3_hotel_interior_rooftop":	{ "chapter": "The Northern Star", "chapterNum": 5, "location": "Northern Star" },
+				"a3_hotel_street":					{ "chapter": "The Northern Star", "chapterNum": 5, "location": "Northern Star" },
+				
+				"a3_c17_processing_plant":	{ "chapter": "Arms Race", "chapterNum": 6, "location": "Holden Company Processing Plant" },
+				
+				"a3_distillery":							{ "chapter": "Jeff", "chapterNum": 7, "location": "Golden Lion Distillery" },
+				
+				"a4_c17_zoo":				{ "chapter": "Captivity", "chapterNum": 8, "location": "Central Zoo" },
+				
+				"a4_c17_tanker_yard":				{ "chapter": "Revelations", "chapterNum": 9, "location": "Tanker Yard" },
+				
+				"a4_c17_water_tower":			{ "chapter": "Breaking and Entering", "chapterNum": 10, "location": "Tanker Yard" },
+				"a4_c17_parking_garage":		{ "chapter": "Breaking and Entering", "chapterNum": 10, "location": "Parking Garage" },
+
+				"a5_vault":								{ "chapter": "Point Extraction", "chapterNum": 11, "location": "Vault" },
+				"a5_ending":							{ "chapter": "Point Extraction", "chapterNum": 11, "location": "Vault" },
+            }
+        };
+
+        // Game icons
+		//todo: better & matching icons
+        const gameIcons = {
+            "Half-Life": "https://cdn2.steamgriddb.com/icon/e16e74a63567ecb44ade5c87002bb1d9/32/32x32.png",
+            "Half-Life: Opposing Force": "https://cdn2.steamgriddb.com/icon/5fd0b37cd7dbbb00f97ba6ce92bf5add/32/32x32.png",
+            "Half-Life: Blue Shift": "https://cdn2.steamgriddb.com/icon/197fabf83fac149373c2c7acdd53f0c2/32/64x64.png",
+            "Half-Life 2": "https://cdn2.steamgriddb.com/icon/84b20b1f5a0d103f5710bb67a043cd78/32/32x32.png",
+            "Half-Life 2: Episode One": "https://cdn2.steamgriddb.com/icon/56e4bd3f359025fba2d2e080cb2c25a9.png",
+            "Half-Life 2: Episode Two": "https://cdn2.steamgriddb.com/icon/ae014feb8633025028618ce2071bb1c2.png",
+            "Half-Life: Alyx": "https://cdn2.steamgriddb.com/icon/12e086066892a311b752673a28583d3f/8/32x32.png"
+        };
+
+        // Flatten all maps into an array (for autocomplete)
+        const allMaps = [];
+        for (const game in gameData) {
+            for (const map in gameData[game]) {
+                allMaps.push({
+                    game: game,
+                    mapCode: map,
+                    chapter: gameData[game][map].chapter,
+                    chapterNum: gameData[game][map].chapterNum,
+                    location: gameData[game][map].location
+                });
+            }
+        }
+
+        // Dark mode toggle
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        darkModeToggle.addEventListener('change', function() {
+            document.body.classList.toggle('dark-mode', this.checked);
+            // Save preference to localStorage
+            localStorage.setItem('darkMode', this.checked ? 'enabled' : 'disabled');
+        });
+
+        // Check saved preference
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            darkModeToggle.checked = true;
+            document.body.classList.add('dark-mode');
+        }
+        
+        // Setup event listeners when page loads
+        document.addEventListener("DOMContentLoaded", function() {
+            const searchInput = document.getElementById("searchInput");
+            const mapSelect = document.getElementById("mapSelect");
+            const clearSearchBtn = document.getElementById("clearSearch");
+            
+            // Update search box when dropdown selection changes
+            mapSelect.addEventListener("change", function() {
+                if (this.value) {
+                    searchInput.value = this.value;
+                }
+            });
+
+            // Clear search button
+            clearSearchBtn.addEventListener("click", function() {
+                searchInput.value = "";
+                document.getElementById("autocompleteList").innerHTML = "";
+                // Also reset the dropdowns
+                document.getElementById("gameSelect").value = "";
+                populateMaps(); // This will reset the map select dropdown
+            });
+        });
+
+        // Organize maps by chapter
+        function getChaptersForGame(game) {
+            const chapters = {};
+            
+            if (!gameData[game]) return chapters;
+            
+            // Group maps by chapter
+            for (const mapCode in gameData[game]) {
+                const chapter = gameData[game][mapCode].chapter;
+                const chapterNum = gameData[game][mapCode].chapterNum;
+                const chapterKey = `${chapterNum}: ${chapter}`;
+                
+                if (!chapters[chapterKey]) {
+                    chapters[chapterKey] = [];
+                }
+                chapters[chapterKey].push(mapCode);
+            }
+            
+            return chapters;
+        }
+
+        function populateMaps() {
+            const gameSelect = document.getElementById("gameSelect");
+            const mapSelect = document.getElementById("mapSelect");
+            const searchInput = document.getElementById("searchInput");
+            const selectedGame = gameSelect.value;
+
+            // Clear existing map options
+            mapSelect.innerHTML = '<option value="">-- Select a Map --</option>';
+
+            if (selectedGame && gameData[selectedGame]) {
+                // Get chapters for selected game
+                const chapters = getChaptersForGame(selectedGame);
+                
+                // Add maps grouped by chapter
+                for (const chapter in chapters) {
+                    // Create an optgroup for the chapter
+                    const chapterGroup = document.createElement("optgroup");
+                    chapterGroup.label = chapter;
+                    mapSelect.appendChild(chapterGroup);
+                    
+                    // Add maps for this chapter
+                    for (const mapCode of chapters[chapter]) {
+                        const option = document.createElement("option");
+                        option.value = mapCode;
+                        option.textContent = mapCode;
+                        chapterGroup.appendChild(option);
+                    }
+                }
+                
+                // If search input has a valid map code for the selected game, select it
+                const currentSearchValue = searchInput.value.trim();
+                if (currentSearchValue && gameData[selectedGame][currentSearchValue]) {
+                    mapSelect.value = currentSearchValue;
+                    displayCode(); // Show the code
+                }
+            }
+        }
+
+        function displayCode() {
+            const gameSelect = document.getElementById("gameSelect");
+            const mapSelect = document.getElementById("mapSelect");
+            const codeOutput = document.getElementById("codeOutput");
+            const searchInput = document.getElementById("searchInput");
+
+            const selectedGame = gameSelect.value;
+            const selectedMap = mapSelect.value;
+
+            if (selectedGame && selectedMap && gameData[selectedGame][selectedMap]) {
+                const data = gameData[selectedGame][selectedMap];
+                const gameName = gameSelect.options[gameSelect.selectedIndex].text;
+                
+                // Format chapter with number for the code
+                let chapterDisplay = data.chapter;
+                // Only add chapter number if it's not 0 (like for tutorial/hazard course chapters)
+                const chapterFormat = data.chapterNum > 0 ? `${data.chapterNum}: ${data.chapter}` : data.chapter;
+
+                // Update search box with selected map code
+                searchInput.value = selectedMap;
+
+                codeOutput.innerText =
+                `|location=<code>${selectedMap}</code>, [[${data.location}]]
+                |source=''[[${gameName}]]'', ''[[${gameName} storyline#Chapter ${chapterFormat}|${data.chapter}]]''`;
+            } else {
+                codeOutput.textContent = "Select a map to view the code.";
+            }
+        }
+        
+        function copyCode() {
+            const codeOutput = document.getElementById("codeOutput");
+            const textToCopy = codeOutput.innerText || codeOutput.textContent;
+            const copyButton = document.getElementById("copyButton");
+
+            if (textToCopy !== "Select a map to view the code.") {
+                navigator.clipboard.writeText(textToCopy).then(() => {
+                    const originalText = copyButton.textContent;
+
+                    // Fading out
+                    copyButton.textContent = "Copied!";
+                    copyButton.classList.remove("fade-in");
+                    copyButton.classList.add("fade-out");
+
+                    setTimeout(() => {
+                        // Fading in with original text
+                        copyButton.textContent = originalText;
+                        copyButton.classList.remove("fade-out");
+                        copyButton.classList.add("fade-in");
+                    }, 1000);
+                }).catch(err => {
+                    console.error("Failed to copy text: ", err);
+                });
+            } else {
+                alert("No code to copy. Please select a game and map first.");
+            }
+        }
+
+        // Highlight search terms in results
+        function highlightText(text, searchTerm) {
+            if (!searchTerm) return text;
+            
+            // Escape special regex characters
+            const escapedSearchTerm = searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            
+            // Create regex to find the search term (case insensitive)
+            const regex = new RegExp(`(${escapedSearchTerm})`, 'gi');
+            
+            // Replace matches with highlighted span
+            return text.replace(regex, '<span class="highlight">$1</span>');
+        }
+
+        // Auto-complete functionality
+        const searchInput = document.getElementById("searchInput");
+        const autocompleteList = document.getElementById("autocompleteList");
+        
+        // Input event listener
+        searchInput.addEventListener("input", function() {
+            // Clear existing list items
+            autocompleteList.innerHTML = "";
+            
+            // Get input value
+            const inputValue = this.value.trim().toLowerCase();
+            
+            // Don't show suggestions if input is empty or too short
+            if (!inputValue || inputValue.length < 2) {
+                return false;
+            }
+            
+            // Group matches by game
+            const gameMatches = {};
+            
+            // Find and add matching maps
+            for (const mapItem of allMaps) {
+                if (mapItem.mapCode.toLowerCase().includes(inputValue) || 
+                    mapItem.chapter.toLowerCase().includes(inputValue) || 
+                    mapItem.location.toLowerCase().includes(inputValue)) {
+                    
+                    // Group by game
+                    if (!gameMatches[mapItem.game]) {
+                        gameMatches[mapItem.game] = [];
+                    }
+                    
+                    gameMatches[mapItem.game].push(mapItem);
+                }
+            }
+            
+            // Display results by game with headers
+            for (const game in gameMatches) {
+                if (gameMatches[game].length > 0) {
+                    // Add game header
+                    const gameHeader = document.createElement("div");
+                    gameHeader.className = "game-header";
+                    gameHeader.innerHTML = `
+                        <img src="${gameIcons[game]}" alt="${game}" class="game-icon">
+                        ${game}
+                    `;
+                    autocompleteList.appendChild(gameHeader);
+                    
+                    // Add maps for this game (max 5 per game)
+                    const gameMaps = gameMatches[game].slice(0, 5);
+                    for (const mapItem of gameMaps) {
+                        // Create a container for the whole item
+                        const itemContainer = document.createElement("div");
+                        itemContainer.className = "item-container";
+                        
+                        // Highlight the search term in each field
+                        const highlightedMapCode = highlightText(mapItem.mapCode, inputValue);
+                        const highlightedChapter = highlightText(mapItem.chapter, inputValue);
+                        const highlightedLocation = highlightText(mapItem.location, inputValue);
+                        
+                        // Format chapter number display for searching
+                        const chapterDisplay = mapItem.chapterNum > 0 ? `Chapter ${mapItem.chapterNum}: ${mapItem.chapter}` : mapItem.chapter;
+                        
+                        // Set item content without the copy button
+                        itemContainer.innerHTML = `
+                            <div class="item-content">
+                                <strong>${highlightedMapCode}</strong>
+                                <div class="map-info">${chapterDisplay} | Location: ${highlightedLocation}</div>
+                            </div>
+                        `;
+                        
+                        // Set click handler for the entire container
+                        itemContainer.addEventListener("click", function(e) {
+                            // Fill input with selected map code
+                            searchInput.value = mapItem.mapCode;
+                            
+                            // Automatically select game and map
+                            const gameSelect = document.getElementById("gameSelect");
+                            gameSelect.value = mapItem.game;
+                            
+                            // Populate map options
+                            populateMaps();
+                            
+                            // Select the correct map
+                            const mapSelect = document.getElementById("mapSelect");
+                            mapSelect.value = mapItem.mapCode;
+                            
+                            // Show the code
+                            displayCode();
+                            
+                            // Clear suggestions
+                            autocompleteList.innerHTML = "";
+                        });
+                        
+                        autocompleteList.appendChild(itemContainer);
+                    }
+                }
+            }
+            
+            // Check if there are no matches
+            if (Object.keys(gameMatches).length === 0) {
+                const noResults = document.createElement("div");
+                noResults.className = "item-container";
+                noResults.textContent = "No matches found";
+                autocompleteList.appendChild(noResults);
+            }
+            
+            // Removed automatic selection of exact matches
+        });
+        
+        // Close suggestion list when clicking elsewhere
+        document.addEventListener("click", function(e) {
+            if (e.target !== searchInput && e.target.id !== 'clearSearch') {
+                autocompleteList.innerHTML = "";
+            }
+        });
+        
+        // Keyboard navigation support (up/down arrows and Enter)
+        let currentFocus = -1;
+        searchInput.addEventListener("keydown", function(e) {
+            const items = autocompleteList.getElementsByClassName("item-container");
+            
+            if (e.key === "ArrowDown") {
+                // Move to next item
+                currentFocus++;
+                addActive(items);
+                e.preventDefault(); // Prevent page scrolling
+            } 
+            else if (e.key === "ArrowUp") {
+                // Move to previous item
+                currentFocus--;
+                addActive(items);
+                e.preventDefault(); // Prevent page scrolling
+            } 
+            else if (e.key === "Enter") {
+                // Select active item when Enter is pressed
+                e.preventDefault();
+                if (currentFocus > -1 && items.length > 0) {
+                    items[currentFocus].click();
+                }
+            } 
+            else if (e.key === "Escape") {
+                // Clear on Escape
+                autocompleteList.innerHTML = "";
+                currentFocus = -1;
+            }
+        });
+        
+        function addActive(items) {
+            if (!items || items.length === 0) return false;
+            
+            // First remove all active classes
+            removeActive(items);
+            
+            // Limit current focus
+            if (currentFocus >= items.length) currentFocus = 0;
+            if (currentFocus < 0) currentFocus = (items.length - 1);
+            
+            // Add active class to selected item
+            items[currentFocus].classList.add("autocomplete-active");
+            
+            // Scroll item into view if it's outside visible area
+            items[currentFocus].scrollIntoView({ block: "nearest" });
+        }
+        
+        function removeActive(items) {
+            for (let i = 0; i < items.length; i++) {
+                items[i].classList.remove("autocomplete-active");
+            }
+        }
+    </script>
+</body>
+</html>
