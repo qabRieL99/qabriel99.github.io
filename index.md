@@ -15,4 +15,4 @@
 [Çeviriler](https://combineoverwiki.net/wiki/User:QabRieL)
 
 ### Half-Life: Map Selector:
-[Half-Life: Map Selector](https://combineoverwiki.net/wiki/User:QabRieL/selector.html)
+[Half-Life: Map Selector](https://qabriel99.github.io/selector.html)
