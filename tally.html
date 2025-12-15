@@ -64,7 +64,7 @@
 </div>
 
 <script>
-const FIYAT_PAKET = 75; 
+const FIYAT_PAKET = 90; 
 const ADET_PAKET = 20;
 const ADET_MALIYET = FIYAT_PAKET / ADET_PAKET;
 const KEY = "sigaraTakip_V4_2"; 
@@ -86,22 +86,38 @@ function toggleTheme() {
 
 function pazartesiBul(d) {
     const t = new Date(d);
-    // JS'de Pazar 0, Pazartesi 1... Cumartesi 6'dır.
-    // Biz 1 (Pazartesi) ile 7 (Pazar) arasında bir değer istiyoruz.
-    const day = t.getDay() === 0 ? 7 : t.getDay(); 
-    // Bulunan gün sayısını (1-7) kullanarak kaç gün geriye gideceğimizi hesapla.
+    // Saati, dakikayı, saniyeyi sıfırla ki yerel saatin başlangıcı (00:00) olsun
+    t.setHours(0, 0, 0, 0); 
+    
+    const day = t.getDay() || 7; // Pazar=0 ise 7 olsun
     t.setDate(t.getDate() - day + 1);
-    return t.toISOString().split("T")[0];
+    
+    // Yerel saati koruyarak 'YYYY-MM-DD' formatını elle oluştur.
+    const year = t.getFullYear();
+    const month = String(t.getMonth() + 1).padStart(2, '0');
+    const dayOfMonth = String(t.getDate()).padStart(2, '0');
+    return `${year}-${month}-${dayOfMonth}`;
 }
 
 function haftaKontrol() {
     let store = yukle();
-    const pz = pazartesiBul(new Date());
+    const pz = pazartesiBul(new Date()); 
+    
     if (store.data.length === 0 || store.data[store.data.length - 1][0].tarih !== pz) {
         const h = [];
+        // pz (Pazartesi tarihi) zaten YYYY-MM-DD formatında olduğu için:
+        const pzDate = new Date(pz + 'T00:00:00'); // Yeni tarih objesini bu yerel tarihle oluştur
+        
         for (let i = 0; i < 7; i++) {
-            const d = new Date(pz); d.setDate(d.getDate() + i);
-            h.push({ tarih: d.toISOString().split("T")[0], sayi: 0 });
+            const d = new Date(pzDate); 
+            d.setDate(pzDate.getDate() + i); // pzDate'in yerel tarihini 1'er gün artır
+            
+            // Yerel saati koruyarak YYYY-MM-DD formatını elle oluştur
+            const year = d.getFullYear();
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const dayOfMonth = String(d.getDate()).padStart(2, '0');
+            
+            h.push({ tarih: `${year}-${month}-${dayOfMonth}`, sayi: 0 });
         }
         store.data.push(h);
         kaydet(store);
@@ -133,7 +149,10 @@ function guncelleTimer() {
 function render() {
     const store = yukle();
     const data = [...store.data].reverse();
-    const today = new Date().toISOString().split("T")[0];
+    
+    const now = new Date();
+    // Yerel saati koruyarak 'YYYY-MM-DD' formatını elle oluştur.
+    const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
     
     const buHaftaTotal = store.data[store.data.length-1].reduce((s,g)=>s+g.sayi,0);
     document.getElementById("costText").innerText = (buHaftaTotal * ADET_MALIYET).toFixed(2) + " ₺";
@@ -147,23 +166,29 @@ function render() {
         container.innerHTML += `
             <div class="card">
                 <div class="accordion-header ${isCurrent?'active':''}" onclick="toggleAccordion(this)">
-                    <span>📅 ${new Date(hafta[0].tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${new Date(hafta[6].tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
+                    <span>📅 ${hafta[0].tarih}</span>
                     <span>Haftalık: ${hafta.reduce((s,g)=>s+g.sayi,0)} ▾</span>
                 </div>
                 <div style="display: ${isCurrent?'block':'none'}">
                     <table>
-                        ${hafta.map((g, j) => `
-                            <tr class="${g.tarih === today ? 'today-row' : ''}">
-                                <td style="text-align:left">${new Date(g.tarih).toLocaleDateString('tr-TR', {weekday:'long'})}</td>
-                                <td style="font-size:1.2em"><b>${g.sayi}</b></td>
-                                <td>
-                                    <div style="display:flex; gap:5px; justify-content:center;">
-                                        <button class="btn-minus" onclick="degistir(${i},${j},-1)">-</button>
-                                        <button class="btn-plus" onclick="degistir(${i},${j},1)">+</button>
-                                    </div>
-                                </td>
-                            </tr>
-                        `).join('')}
+                        ${hafta.map((g, j) => {
+                            const isToday = g.tarih === today;
+                            const gunAdi = new Date(g.tarih).toLocaleDateString('tr-TR', {weekday:'long'});
+                            const etiket = isToday ? '<span style="color:white; background:#4a90e2; padding: 2px 6px; border-radius: 4px; font-size: 0.75em; margin-left: 8px;">BUGÜN</span>' : '';
+                            
+                            return `
+                                <tr class="${isToday ? 'today-row' : ''}">
+                                    <td style="text-align:left">${gunAdi}${etiket}</td>
+                                    <td style="font-size:1.2em"><b>${g.sayi}</b></td>
+                                    <td>
+                                        <div style="display:flex; gap:5px; justify-content:center;">
+                                            <button class="btn-minus" onclick="degistir(${i},${j},-1)">-</button>
+                                            <button class="btn-plus" onclick="degistir(${i},${j},1)">+</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            `;
+                        }).join('')}
                     </table>
                 </div>
             </div>`;
@@ -195,21 +220,42 @@ function refreshStats() {
         options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
     });
 
-    const todayStr = new Date().toISOString().split("T")[0];
+    // 1. Düzeltme: Yerel Saate Göre Bugünün Tarihini YYYYY-MM-DD formatında al
+    const now = new Date();
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+    
     const bugun = (hafta.find(g => g.tarih === todayStr) || {sayi: 0}).sayi;
     const bugunIdx = hafta.findIndex(g => g.tarih === todayStr);
     
     let analiz = `<strong>Karşılaştırma:</strong><br>`;
+    
+    // 2. Analiz Düzeltmesi: bugunIdx 0'dan büyükse (yani Pazartesi değilse) karşılaştırma yap
     if (bugunIdx > 0) {
         const dun = hafta[bugunIdx - 1].sayi;
-        if (dun > 0) {
-            const fark = bugun - dun;
+        const fark = bugun - dun;
+        
+        if (dun === 0 && bugun === 0) {
+             analiz += "Dün de bugün de tertemiz! 👏";
+        } else if (dun === 0 && bugun > 0) {
+            analiz += `⚠️ Dün hiç içmemiştin, bugün ${bugun} adet içtin. Dikkat!`;
+        } else if (bugun === 0 && dun > 0) {
+            analiz += `🎉 Dün ${dun} adet içmiştin, bugün sıfır! Müthiş bir başarı!`;
+        } else { // Hem dün hem bugün > 0 ise yüzde hesapla
             const yuzde = Math.abs(Math.round((fark / dun) * 100));
-            analiz += fark > 0 ? `📈 Düne göre %${yuzde} artış var.` : (fark < 0 ? `📉 Düne göre %${yuzde} daha az içtin. Harika!` : "⚖️ Dün ile aynı sayıdasın.");
-        } else {
-            analiz += bugun > 0 ? `⚠️ Dün hiç içmemiştin, bugün ${bugun} adet içtin.` : "Dün de bugün de tertemiz! 👏";
+            
+            if (fark > 0) {
+                analiz += `📈 Düne (${dun} adet) göre %${yuzde} artış var.`;
+            } else if (fark < 0) {
+                analiz += `📉 Düne (${dun} adet) göre %${yuzde} daha az içtin. Harika!`;
+            } else {
+                analiz += "⚖️ Dün ile aynı sayıdasın.";
+            }
         }
-    } else { analiz += "Haftanın ilk günündesin."; }
+    } else { 
+        // Bugün Pazartesi ise (bugunIdx === 0) veya tarih bulunamazsa 
+        analiz += "Haftanın ilk günündesin (Pazartesi). Dünkü veriler (geçen hafta) ile karşılaştırılamaz."; 
+    }
+    
     document.getElementById("analysisText").innerHTML = analiz;
 }
 
