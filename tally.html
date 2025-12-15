@@ -144,7 +144,7 @@ function render() {
         container.innerHTML += `
             <div class="card">
                 <div class="accordion-header ${isCurrent?'active':''}" onclick="toggleAccordion(this)">
-                    <span>📅 ${hafta[0].tarih}</span>
+                    <span>📅 ${new Date(hafta[0].tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })} - ${new Date(hafta[6].tarih).toLocaleDateString('tr-TR', { day: 'numeric', month: 'short' })}</span>
                     <span>Haftalık: ${hafta.reduce((s,g)=>s+g.sayi,0)} ▾</span>
                 </div>
                 <div style="display: ${isCurrent?'block':'none'}">
