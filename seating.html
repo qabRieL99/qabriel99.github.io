@@ -3,14 +3,17 @@
 <html lang="tr" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
 <title>Oturma Düzeni</title>
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,700;0,900;1,400&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-/* ── THEME TOKENS ── */
+/* ── TOKENS ── */
 [data-theme="light"] {
   --bg: #f5f0e8;
-  --surface: #fff;
+  --surface: #ffffff;
   --card: #faf7f2;
   --ink: #1a1612;
   --muted: #8a7f72;
@@ -23,39 +26,48 @@
   --surface: #1e1b18;
   --card: #252119;
   --ink: #f0ebe3;
-  --muted: #7a7268;
+  --muted: #6e6860;
   --border: #302b25;
-  --shadow: rgba(0,0,0,0.3);
+  --shadow: rgba(0,0,0,0.35);
   --ghost-bg: #252119;
 }
 :root {
   --accent: #c94f2c;
   --accent2: #2c6fc9;
-  --radius: 10px;
+  --radius: 12px;
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-top: env(safe-area-inset-top, 0px);
 }
 
-- { box-sizing: border-box; margin: 0; padding: 0; }
-  body {
-  background: var(–bg);
-  color: var(–ink);
-  font-family: ‘DM Sans’, sans-serif;
-  min-height: 100vh;
-  transition: background 0.25s, color 0.25s;
-  }
-  body::before {
-  content: ‘’;
-  position: fixed; inset: 0;
-  background-image:
-  radial-gradient(circle at 15% 20%, rgba(201,79,44,0.07) 0%, transparent 40%),
-  radial-gradient(circle at 85% 80%, rgba(44,111,201,0.07) 0%, transparent 40%);
-  pointer-events: none;
-  }
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+background: var(–bg);
+color: var(–ink);
+font-family: ‘DM Sans’, sans-serif;
+min-height: 100dvh;
+overscroll-behavior-y: none;
+-webkit-tap-highlight-color: transparent;
+transition: background 0.25s, color 0.25s;
+}
+
+body::before {
+content: ‘’;
+position: fixed; inset: 0;
+background-image:
+radial-gradient(circle at 15% 20%, rgba(201,79,44,0.07) 0%, transparent 40%),
+radial-gradient(circle at 85% 80%, rgba(44,111,201,0.07) 0%, transparent 40%);
+pointer-events: none; z-index: 0;
+}
 
 .app {
-position: relative;
+position: relative; z-index: 1;
 max-width: 900px;
 margin: 0 auto;
-padding: 24px 16px 60px;
+padding: 12px 12px calc(24px + var(–safe-bottom));
+padding-top: calc(12px + var(–safe-top));
 }
 
 /* ── TOPBAR ── */
@@ -63,48 +75,43 @@ padding: 24px 16px 60px;
 display: flex;
 align-items: center;
 justify-content: space-between;
-margin-bottom: 24px;
-gap: 12px;
-flex-wrap: wrap;
+margin-bottom: 12px;
+gap: 8px;
 }
 .logo {
 font-family: ‘Fraunces’, serif;
-font-size: 1.8rem; font-weight: 900;
+font-size: clamp(1.4rem, 5vw, 1.9rem);
+font-weight: 900;
 letter-spacing: -1px; line-height: 1;
 }
 .logo em { font-style: italic; color: var(–accent); }
 
-.topbar-right { display: flex; align-items: center; gap: 10px; }
-
-/* dark mode toggle */
 .theme-toggle {
 background: var(–card);
 border: 1.5px solid var(–border);
 border-radius: 50px;
-width: 52px; height: 28px;
+width: 52px; height: 30px;
 cursor: pointer;
 position: relative;
-transition: background 0.2s, border-color 0.2s;
 flex-shrink: 0;
+transition: background 0.2s, border-color 0.2s;
+/* big enough touch target */
+touch-action: manipulation;
 }
 .theme-toggle::after {
 content: ‘’;
 position: absolute;
 top: 3px; left: 3px;
-width: 20px; height: 20px;
+width: 22px; height: 22px;
 background: var(–ink);
 border-radius: 50%;
 transition: transform 0.25s cubic-bezier(.34,1.56,.64,1), background 0.2s;
 }
 [data-theme=“dark”] .theme-toggle::after {
-transform: translateX(24px);
+transform: translateX(22px);
 background: #ffd93d;
 }
-.theme-icon {
-position: absolute; top: 50%;
-transform: translateY(-50%);
-font-size: 0.7rem; pointer-events: none;
-}
+.theme-icon { position: absolute; top: 50%; transform: translateY(-50%); font-size: 0.65rem; pointer-events: none; }
 .theme-icon.sun { right: 6px; }
 .theme-icon.moon { left: 6px; }
 
@@ -112,34 +119,45 @@ font-size: 0.7rem; pointer-events: none;
 .panel {
 background: var(–surface);
 border: 1.5px solid var(–border);
-border-radius: 16px;
-padding: 18px 20px;
-margin-bottom: 14px;
-box-shadow: 0 4px 24px var(–shadow);
+border-radius: var(–radius);
+padding: 14px;
+margin-bottom: 10px;
+box-shadow: 0 2px 12px var(–shadow);
 transition: background 0.25s, border-color 0.25s;
 }
 
 /* ── CLASS SWITCHER ── */
+.class-switcher-wrap {
+overflow-x: auto;
+-webkit-overflow-scrolling: touch;
+scrollbar-width: none;
+margin-bottom: 10px;
+}
+.class-switcher-wrap::-webkit-scrollbar { display: none; }
 .class-switcher {
 display: flex;
 gap: 8px;
 align-items: center;
-flex-wrap: wrap;
+width: max-content;
+padding: 2px 2px 6px;
 }
+
 .class-tab {
-padding: 7px 16px;
+padding: 0 16px;
+height: 40px;
 border-radius: 50px;
 border: 1.5px solid var(–border);
 background: var(–card);
 color: var(–muted);
 font-family: ‘DM Sans’, sans-serif;
-font-size: 0.85rem; font-weight: 500;
+font-size: 0.9rem; font-weight: 500;
 cursor: pointer;
 transition: all 0.18s;
 display: flex; align-items: center; gap: 6px;
 white-space: nowrap;
+touch-action: manipulation;
+-webkit-tap-highlight-color: transparent;
 }
-.class-tab:hover { border-color: var(–accent); color: var(–ink); }
 .class-tab.active {
 background: var(–accent);
 border-color: var(–accent);
@@ -147,104 +165,113 @@ color: #fff;
 }
 .class-tab .del-cls {
 background: none; border: none;
-color: rgba(255,255,255,0.7);
-cursor: pointer; font-size: 0.9rem;
-line-height: 1; padding: 0 2px;
+color: rgba(255,255,255,0.8);
+cursor: pointer; font-size: 1.1rem;
+line-height: 1; padding: 2px 2px 2px 0;
 display: none;
+touch-action: manipulation;
 }
 .class-tab.active .del-cls { display: inline; }
-.class-tab .del-cls:hover { color: #fff; }
 
 .btn-new-class {
-padding: 7px 14px;
+padding: 0 16px;
+height: 40px;
 border-radius: 50px;
 border: 1.5px dashed var(–border);
 background: transparent;
 color: var(–muted);
 font-family: ‘DM Sans’, sans-serif;
-font-size: 0.85rem; font-weight: 500;
+font-size: 0.9rem; font-weight: 500;
 cursor: pointer;
-transition: all 0.18s;
 white-space: nowrap;
+touch-action: manipulation;
+transition: all 0.18s;
 }
-.btn-new-class:hover { border-color: var(–accent); color: var(–accent); }
 
 /* ── CLASS NAME EDITOR ── */
 .class-name-row {
-display: flex; align-items: center; gap: 10px;
-margin-bottom: 14px;
+display: flex; align-items: center; gap: 8px;
+margin-bottom: 12px;
 }
 .class-name-input {
 font-family: ‘Fraunces’, serif;
-font-size: 1.3rem; font-weight: 700;
+font-size: 1.2rem; font-weight: 700;
 background: transparent;
 border: none; border-bottom: 2px solid var(–border);
 color: var(–ink);
 padding: 4px 6px;
 outline: none;
-width: 220px;
+flex: 1; min-width: 0;
 transition: border-color 0.2s;
+/* prevent iOS zoom */
+font-size: 16px;
 }
 .class-name-input:focus { border-bottom-color: var(–accent); }
-.class-name-hint { font-size: 0.75rem; color: var(–muted); }
+.class-name-hint { font-size: 0.72rem; color: var(–muted); flex-shrink: 0; }
 
-/* ── INPUTS ── */
-.input-row { display: flex; gap: 10px; margin-bottom: 14px; }
+/* ── STUDENT INPUT ── */
+.input-row { display: flex; gap: 8px; margin-bottom: 12px; }
 #nameInput {
-flex: 1;
+flex: 1; min-width: 0;
 background: var(–card);
 border: 1.5px solid var(–border);
 border-radius: 10px;
 color: var(–ink);
 font-family: ‘DM Sans’, sans-serif;
-font-size: 1rem;
-padding: 11px 16px;
+/* 16px prevents iOS auto-zoom */
+font-size: 16px;
+padding: 12px 14px;
 outline: none;
 transition: border-color 0.2s, background 0.25s;
+-webkit-appearance: none;
 }
 #nameInput:focus { border-color: var(–accent); }
 #nameInput::placeholder { color: var(–muted); }
 
+/* ── BUTTONS ── */
 .btn {
-padding: 11px 18px;
+height: 46px;
+padding: 0 18px;
 border-radius: 10px; border: none;
 font-family: ‘DM Sans’, sans-serif;
-font-size: 0.9rem; font-weight: 600;
+font-size: 0.95rem; font-weight: 600;
 cursor: pointer; transition: all 0.18s;
 white-space: nowrap;
+touch-action: manipulation;
+display: inline-flex; align-items: center; justify-content: center;
+-webkit-tap-highlight-color: transparent;
 }
-.btn-add { background: var(–ink); color: var(–bg); }
-.btn-add:hover { opacity: 0.85; transform: translateY(-1px); }
+.btn-add { background: var(–ink); color: var(–bg); flex-shrink: 0; }
 .btn-primary {
 background: var(–accent); color: #fff;
 box-shadow: 0 4px 14px rgba(201,79,44,0.3);
-padding: 11px 24px; border-radius: 12px;
+height: 46px; padding: 0 22px;
 }
-.btn-primary:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(201,79,44,0.4); }
 .btn-secondary {
 background: var(–card); color: var(–ink);
 border: 1.5px solid var(–border);
 }
-.btn-secondary:hover { border-color: var(–ink); }
 
 /* ── CHIPS ── */
 .chips-area {
-display: flex; flex-wrap: wrap; gap: 7px;
-min-height: 28px; align-items: flex-start;
+display: flex; flex-wrap: wrap; gap: 6px;
+min-height: 24px; align-items: flex-start;
 }
 .chip {
 background: var(–card);
 border: 1.5px solid var(–border);
 border-radius: 20px;
-padding: 4px 10px 4px 12px;
-font-size: 0.82rem; font-weight: 500;
-display: flex; align-items: center; gap: 5px;
+padding: 5px 10px 5px 12px;
+font-size: 0.85rem; font-weight: 500;
+display: flex; align-items: center; gap: 4px;
 transition: background 0.25s, border-color 0.25s;
 }
 .chip-del {
 background: none; border: none;
 color: var(–muted); cursor: pointer;
-font-size: 1rem; line-height: 1; padding: 0;
+font-size: 1.1rem; line-height: 1;
+padding: 2px 2px 2px 0;
+touch-action: manipulation;
 transition: color 0.15s;
 }
 .chip-del:hover { color: var(–accent); }
@@ -252,22 +279,31 @@ transition: color 0.15s;
 
 /* ── ACTION BAR ── */
 .action-bar {
-display: flex; align-items: center; gap: 10px;
-flex-wrap: wrap;
-padding: 12px 16px;
 background: var(–surface);
 border: 1.5px solid var(–border);
-border-radius: 12px;
-margin-bottom: 18px;
+border-radius: var(–radius);
+padding: 10px 12px;
+margin-bottom: 10px;
+display: flex;
+align-items: center;
+gap: 8px;
+flex-wrap: wrap;
 transition: background 0.25s, border-color 0.25s;
 }
-.capacity-info { font-size: 0.8rem; color: var(–muted); }
+.capacity-info { font-size: 0.82rem; color: var(–muted); flex: 1; min-width: 0; }
 .capacity-info strong { color: var(–ink); }
-.action-bar .right { display: flex; gap: 8px; margin-left: auto; flex-wrap: wrap; }
+.action-btns { display: flex; gap: 8px; flex-shrink: 0; }
+/* On very small screens, stack the Oturt button full width */
+@media (max-width: 380px) {
+.action-bar { flex-direction: column; align-items: stretch; }
+.action-btns { width: 100%; }
+.btn-primary { flex: 1; }
+.capacity-info { text-align: center; }
+}
 
 .drag-hint {
 text-align: center; font-size: 0.8rem; color: var(–muted);
-margin-bottom: 16px;
+margin-bottom: 12px; padding: 0 8px;
 }
 
 /* ── CLASSROOM ── */
@@ -277,192 +313,166 @@ text-align: center; padding: 10px;
 border-radius: 10px;
 font-family: ‘Fraunces’, serif;
 font-size: 0.95rem; letter-spacing: 1px;
-margin-bottom: 14px; opacity: 0.85;
+margin-bottom: 12px;
 transition: background 0.25s, color 0.25s;
 }
+
 .classroom { display: flex; flex-direction: column; gap: 8px; }
+
 .row-group {
 display: grid;
-grid-template-columns: 1fr 36px 1fr;
-gap: 8px; align-items: center;
+grid-template-columns: 1fr 28px 1fr;
+gap: 6px;
+align-items: center;
 }
+
 .aisle {
 display: flex; align-items: center; justify-content: center;
-font-size: 0.6rem; color: var(–muted);
+font-size: 0.55rem; color: var(–muted);
 writing-mode: vertical-rl;
 user-select: none; letter-spacing: 0.05em;
+opacity: 0.6;
 }
 
 /* ── DESK ── */
 .desk {
 background: var(–surface);
-border: 2px solid var(–border);
+border: 1.5px solid var(–border);
 border-radius: var(–radius);
 display: grid;
 grid-template-columns: 1fr 1fr;
 overflow: hidden;
-box-shadow: 0 2px 8px var(–shadow);
 position: relative;
-min-height: 72px;
+/* Tall enough to be a good touch target */
+min-height: 68px;
 transition: background 0.25s, border-color 0.25s;
 }
 .desk-label {
-position: absolute; top: 3px; left: 6px;
-font-size: 0.6rem; color: var(–muted);
-z-index: 1; pointer-events: none;
+position: absolute; top: 3px; left: 5px;
+font-size: 0.58rem; color: var(–muted);
+z-index: 1; pointer-events: none; opacity: 0.7;
 }
 
 /* ── SEAT ── */
 .seat {
-padding: 10px 8px;
+padding: 8px 6px;
 display: flex; flex-direction: column;
 align-items: center; justify-content: center;
 gap: 3px; position: relative;
-min-height: 70px;
-user-select: none; -webkit-user-select: none;
+/* minimum 44px touch target */
+min-height: 66px;
+-webkit-user-select: none; user-select: none;
 transition: background 0.15s;
+-webkit-tap-highlight-color: transparent;
 }
 .seat:first-of-type { border-right: 1px solid var(–border); }
+
 .seat.filled { cursor: grab; }
 .seat.filled:active { cursor: grabbing; }
+
 .seat.empty {
 background: repeating-linear-gradient(
 45deg, transparent, transparent 5px,
 rgba(128,128,128,0.05) 5px, rgba(128,128,128,0.05) 6px
 );
 }
-.seat.dragging-source { opacity: 0.3; background: rgba(201,79,44,0.06); }
+
+.seat.dragging-source { opacity: 0.25; }
+
 .seat.drag-over {
 background: rgba(44,111,201,0.14) !important;
 outline: 2px solid var(–accent2);
 outline-offset: -2px; z-index: 2;
 }
+
 @keyframes seatPop {
 0%{transform:scale(1)} 40%{transform:scale(1.1)} 100%{transform:scale(1)}
 }
-.seat.popped { animation: seatPop 0.3s ease; }
-.seat-num { font-size: 0.58rem; color: var(–muted); font-weight: 500; }
+.seat.popped { animation: seatPop 0.28s ease; }
+
+.seat-num { font-size: 0.6rem; color: var(–muted); font-weight: 500; opacity: 0.7; }
 .seat-name {
-font-size: 0.82rem; font-weight: 600;
-text-align: center; line-height: 1.25;
+font-size: clamp(0.7rem, 2.8vw, 0.88rem);
+font-weight: 600;
+text-align: center; line-height: 1.2;
 word-break: break-word;
+hyphens: auto;
 }
 
 /* ── DRAG GHOST ── */
 #drag-ghost {
 position: fixed;
-pointer-events: none;
-z-index: 9999;
+pointer-events: none; z-index: 9999;
 background: var(–ghost-bg);
 border: 2px solid var(–accent);
 border-radius: 8px;
 padding: 8px 14px;
 font-family: ‘DM Sans’, sans-serif;
-font-size: 0.85rem; font-weight: 600;
+font-size: 0.9rem; font-weight: 600;
 color: var(–ink);
-box-shadow: 0 8px 24px rgba(0,0,0,0.25);
+box-shadow: 0 8px 28px rgba(0,0,0,0.22);
 white-space: nowrap;
-opacity: 0.92;
-transform: translate(-50%, -130%);
+opacity: 0.93;
+transform: translate(-50%, -140%);
 display: none;
+transition: background 0.25s, color 0.25s;
 }
-
-/* ── EMPTY STATE ── */
-.empty-state {
-text-align: center; padding: 50px 20px;
-color: var(–muted); font-size: 0.9rem; line-height: 1.7;
-}
-.empty-state .icon { font-size: 3rem; margin-bottom: 10px; }
-
-/* ── MODAL ── */
-.modal-overlay {
-position: fixed; inset: 0;
-background: rgba(0,0,0,0.5);
-z-index: 500;
-display: flex; align-items: center; justify-content: center;
-padding: 16px;
-backdrop-filter: blur(2px);
-}
-.modal {
-background: var(–surface);
-border: 1.5px solid var(–border);
-border-radius: 16px;
-padding: 24px;
-width: 100%; max-width: 360px;
-box-shadow: 0 16px 48px rgba(0,0,0,0.2);
-}
-.modal h3 {
-font-family: ‘Fraunces’, serif;
-font-size: 1.3rem; font-weight: 700;
-margin-bottom: 14px;
-}
-.modal input {
-width: 100%;
-background: var(–card);
-border: 1.5px solid var(–border);
-border-radius: 10px;
-color: var(–ink);
-font-family: ‘DM Sans’, sans-serif;
-font-size: 1rem;
-padding: 11px 16px;
-outline: none;
-margin-bottom: 14px;
-transition: border-color 0.2s;
-}
-.modal input:focus { border-color: var(–accent); }
-.modal-btns { display: flex; gap: 10px; justify-content: flex-end; }
 
 /* ── TOAST ── */
 .toast {
-position: fixed; bottom: 28px; left: 50%;
+position: fixed; bottom: calc(20px + var(–safe-bottom)); left: 50%;
 transform: translateX(-50%) translateY(80px);
 background: var(–ink); color: var(–bg);
-font-size: 0.85rem; font-weight: 500;
-padding: 11px 22px; border-radius: 50px;
+font-size: 0.88rem; font-weight: 500;
+padding: 12px 24px; border-radius: 50px;
 transition: transform 0.3s cubic-bezier(.34,1.56,.64,1);
 z-index: 1000; pointer-events: none; white-space: nowrap;
+box-shadow: 0 4px 20px rgba(0,0,0,0.2);
 }
 .toast.show { transform: translateX(-50%) translateY(0); }
 
+/* ── PRINT ── */
 @media print {
 body { background: white; color: black; }
-body::before, .topbar, .panel, .action-bar,
-.class-switcher-wrap, .drag-hint, .toast, .board { display: none !important; }
+body::before, .topbar, .panel, .class-switcher-wrap,
+.action-bar, .drag-hint, .toast, .board { display: none !important; }
 .seat.empty { visibility: hidden; }
-.desk { box-shadow: none; border-color: #ccc; }
+.desk { border-color: #ccc; }
 .seat-name { color: black; }
+.seat:first-of-type { border-right: 1px solid #ddd; }
 }
-@media (max-width: 480px) {
-.logo { font-size: 1.5rem; }
-.seat-name { font-size: 0.74rem; }
-.row-group { grid-template-columns: 1fr 20px 1fr; gap: 5px; }
-.aisle { font-size: 0; }
+
+/* ── LANDSCAPE PHONES ── */
+@media (max-height: 500px) and (orientation: landscape) {
+.app { padding-top: 8px; }
+.topbar { margin-bottom: 8px; }
+.panel { padding: 10px 12px; margin-bottom: 8px; }
+.class-name-row { margin-bottom: 8px; }
 }
 </style>
 
 </head>
 <body>
 <div id="drag-ghost"></div>
-
 <div class="app">
+
   <!-- TOPBAR -->
+
   <div class="topbar">
     <div class="logo">Oturma <em>Düzeni</em></div>
-    <div class="topbar-right">
-      <button class="theme-toggle" onclick="toggleTheme()" title="Koyu/Açık mod">
-        <span class="theme-icon sun">☀️</span>
-        <span class="theme-icon moon">🌙</span>
-      </button>
-    </div>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Koyu/Açık mod">
+      <span class="theme-icon sun">☀️</span>
+      <span class="theme-icon moon">🌙</span>
+    </button>
   </div>
 
   <!-- CLASS SWITCHER -->
 
-  <div class="panel" style="margin-bottom:14px">
+  <div class="class-switcher-wrap">
     <div class="class-switcher" id="classSwitcher"></div>
   </div>
 
-  <!-- STUDENT INPUT -->
+  <!-- INPUT PANEL -->
 
   <div class="panel" id="inputPanel">
     <div class="class-name-row">
@@ -471,12 +481,16 @@ body::before, .topbar, .panel, .action-bar,
         maxlength="30"
         onchange="saveClassName()"
         onblur="saveClassName()">
-      <span class="class-name-hint">← sınıf adını düzenle</span>
+      <span class="class-name-hint">← düzenle</span>
     </div>
     <div class="input-row">
       <input id="nameInput" type="text"
-        placeholder="Öğrenci adı girin ve Enter'a basın..."
-        maxlength="40" onkeydown="if(event.key==='Enter')addName()">
+        placeholder="Öğrenci adı girin..."
+        maxlength="40"
+        autocomplete="off"
+        autocorrect="off"
+        autocapitalize="words"
+        onkeydown="if(event.key==='Enter'){addName();event.preventDefault()}">
       <button class="btn btn-add" onclick="addName()">+ Ekle</button>
     </div>
     <div class="chips-area" id="chips"></div>
@@ -486,58 +500,46 @@ body::before, .topbar, .panel, .action-bar,
 
   <div class="action-bar" id="actionBar" style="display:none">
     <span class="capacity-info" id="capInfo"></span>
-    <div class="right">
-      <button class="btn btn-secondary" onclick="doShuffle()">🔀 Karıştır</button>
-      <button class="btn btn-secondary" onclick="window.print()">🖨️</button>
+    <div class="action-btns">
+      <button class="btn btn-secondary" onclick="doShuffle()" title="Karıştır">🔀</button>
+      <button class="btn btn-secondary" onclick="window.print()" title="Yazdır">🖨️</button>
       <button class="btn btn-primary" onclick="generate()">Oturt!</button>
     </div>
   </div>
 
   <div class="drag-hint" id="dragHint" style="display:none">
-    ↕ Öğrencileri sürükleyerek yer değiştirin
+    ✋ Öğrencileri basılı tutup sürükleyerek yer değiştirin
   </div>
 
   <div id="seating"></div>
 </div>
-
 <div class="toast" id="toastEl"></div>
 
 <script>
-// ── CONSTANTS ──
+// ── CONFIG ──
 const ROWS  = 5;
-const TOTAL = ROWS * 2 * 2; // 20 seats
+const TOTAL = ROWS * 2 * 2; // 20
 
 // ── STATE ──
 let data = loadData();
-// data = { theme, activeId, classes: [ { id, name, names[], order[] } ] }
+let dragSrcIdx = null, touchDragIdx = null, lastOver = null;
 
-let dragSrcIdx   = null;
-let touchDragIdx = null;
-let lastOver     = null;
-
-// ── PERSISTENCE ──
+// ── STORAGE ──
 function loadData() {
   try {
-    const raw = localStorage.getItem('oturma_v1');
+    const raw = localStorage.getItem('oturma_v2');
     if (raw) return JSON.parse(raw);
   } catch(e) {}
   const cls = makeClass('1. Sınıf');
   return { theme: 'light', activeId: cls.id, classes: [cls] };
 }
-
 function saveData() {
-  localStorage.setItem('oturma_v1', JSON.stringify(data));
+  try { localStorage.setItem('oturma_v2', JSON.stringify(data)); } catch(e) {}
 }
-
 function makeClass(name) {
-  return {
-    id: Date.now() + Math.random(),
-    name: name || 'Yeni Sınıf',
-    names: [],
-    order: Array(TOTAL).fill(null)
-  };
+  return { id: Date.now() + '_' + Math.random().toString(36).slice(2),
+           name: name || 'Yeni Sınıf', names: [], order: Array(TOTAL).fill(null) };
 }
-
 function getActive() {
   return data.classes.find(c => c.id === data.activeId) || data.classes[0];
 }
@@ -547,16 +549,13 @@ function applyTheme(t) {
   document.documentElement.setAttribute('data-theme', t);
   data.theme = t; saveData();
 }
-function toggleTheme() {
-  applyTheme(data.theme === 'light' ? 'dark' : 'light');
-}
+function toggleTheme() { applyTheme(data.theme === 'light' ? 'dark' : 'light'); }
 applyTheme(data.theme);
 
 // ── TOAST ──
 function toast(msg) {
   const t = document.getElementById('toastEl');
-  t.textContent = msg;
-  t.classList.add('show');
+  t.textContent = msg; t.classList.add('show');
   clearTimeout(t._t);
   t._t = setTimeout(() => t.classList.remove('show'), 2200);
 }
@@ -573,8 +572,8 @@ function renderSwitcher() {
       const del = document.createElement('button');
       del.className = 'del-cls';
       del.textContent = '×';
-      del.title = 'Bu sınıfı sil';
-      del.onclick = (e) => { e.stopPropagation(); deleteClass(cls.id); };
+      del.title = 'Sınıfı sil';
+      del.onclick = e => { e.stopPropagation(); deleteClass(cls.id); };
       btn.appendChild(del);
     }
     btn.addEventListener('click', () => switchClass(cls.id));
@@ -582,39 +581,31 @@ function renderSwitcher() {
   });
   const addBtn = document.createElement('button');
   addBtn.className = 'btn-new-class';
-  addBtn.textContent = '+ Yeni Sınıf';
+  addBtn.textContent = '＋ Yeni Sınıf';
   addBtn.onclick = newClass;
   sw.appendChild(addBtn);
 }
 
 function switchClass(id) {
-  data.activeId = id;
-  saveData();
-  renderAll();
+  data.activeId = id; saveData(); renderAll();
 }
-
 function newClass() {
-  const cls = makeClass('Yeni Sınıf ' + (data.classes.length + 1));
+  const cls = makeClass('Sınıf ' + (data.classes.length + 1));
   data.classes.push(cls);
   data.activeId = cls.id;
-  saveData();
-  renderAll();
-  // focus class name input
+  saveData(); renderAll();
   setTimeout(() => {
     const inp = document.getElementById('classNameInput');
     inp.focus(); inp.select();
-  }, 50);
+  }, 80);
 }
-
 function deleteClass(id) {
   if (data.classes.length === 1) { toast('En az bir sınıf olmalı!'); return; }
   if (!confirm('Bu sınıfı silmek istediğinizden emin misiniz?')) return;
   data.classes = data.classes.filter(c => c.id !== id);
   data.activeId = data.classes[0].id;
-  saveData(); renderAll();
-  toast('Sınıf silindi.');
+  saveData(); renderAll(); toast('Sınıf silindi.');
 }
-
 function saveClassName() {
   const cls = getActive();
   const val = document.getElementById('classNameInput').value.trim();
@@ -665,7 +656,7 @@ function renderChips() {
   });
   const cnt = document.createElement('span');
   cnt.className = 'chip-count';
-  cnt.textContent = `${cls.names.length} / ${TOTAL} öğrenci`;
+  cnt.textContent = cls.names.length + ' / ' + TOTAL;
   area.appendChild(cnt);
 }
 
@@ -673,7 +664,6 @@ function showBar() {
   document.getElementById('actionBar').style.display = 'flex';
   updateCap();
 }
-
 function updateCap() {
   const cls = getActive();
   const filled = cls.order.filter(Boolean).length;
@@ -686,19 +676,18 @@ function generate() {
   const cls = getActive();
   if (!cls.names.length) return;
   const slots = Array(TOTAL).fill(null);
-  const shuffled = [...cls.names];
-  for (let i = shuffled.length - 1; i > 0; i--) {
+  const sh = [...cls.names];
+  for (let i = sh.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
-    [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
+    [sh[i], sh[j]] = [sh[j], sh[i]];
   }
-  shuffled.forEach((n, i) => { slots[i] = n; });
+  sh.forEach((n, i) => { slots[i] = n; });
   cls.order = slots;
   saveData(); renderClassroom(); updateCap();
   document.getElementById('dragHint').style.display = 'block';
-  toast('🎲 Oturma düzeni oluşturuldu!');
+  toast('🎲 Düzen oluşturuldu!');
 }
-
-function doShuffle() { generate(); toast('🔀 Yeni düzen oluşturuldu!'); }
+function doShuffle() { generate(); toast('🔀 Yeni düzen!'); }
 
 // ── RENDER CLASSROOM ──
 function slotIdx(row, side, sp) {
@@ -717,19 +706,17 @@ function renderClassroom() {
 
   const classroom = document.createElement('div');
   classroom.className = 'classroom';
-
   for (let row = 0; row < ROWS; row++) {
     const rowEl = document.createElement('div');
     rowEl.className = 'row-group';
     rowEl.appendChild(makeDeskEl(cls, row, 'left'));
     const aisle = document.createElement('div');
     aisle.className = 'aisle';
-    aisle.textContent = 'KORIDOR';
+    aisle.textContent = 'KRD';
     rowEl.appendChild(aisle);
     rowEl.appendChild(makeDeskEl(cls, row, 'right'));
     classroom.appendChild(rowEl);
   }
-
   area.appendChild(classroom);
 }
 
@@ -755,10 +742,11 @@ function makeSeatEl(cls, idx) {
   if (name) {
     seat.innerHTML = `<span class="seat-num">${idx + 1}</span><div class="seat-name">${name}</div>`;
     seat.draggable = true;
+
     seat.addEventListener('dragstart', e => {
       dragSrcIdx = idx;
       e.dataTransfer.effectAllowed = 'move';
-      e.dataTransfer.setData('text/plain', idx);
+      e.dataTransfer.setData('text/plain', String(idx));
       setTimeout(() => seat.classList.add('dragging-source'), 0);
     });
     seat.addEventListener('dragend', () => {
@@ -770,9 +758,7 @@ function makeSeatEl(cls, idx) {
   }
 
   seat.addEventListener('dragover', e => {
-    if (dragSrcIdx !== null && dragSrcIdx !== idx) {
-      e.preventDefault(); seat.classList.add('drag-over');
-    }
+    if (dragSrcIdx !== null && dragSrcIdx !== idx) { e.preventDefault(); seat.classList.add('drag-over'); }
   });
   seat.addEventListener('dragleave', () => seat.classList.remove('drag-over'));
   seat.addEventListener('drop', e => {
@@ -795,7 +781,7 @@ function onTouchStart(e) {
   movGhost(e.touches[0]);
   seat.classList.add('dragging-source');
   document.addEventListener('touchmove', onTouchMove, { passive: false });
-  document.addEventListener('touchend',  onTouchEnd);
+  document.addEventListener('touchend', onTouchEnd, { once: true });
 }
 
 function onTouchMove(e) {
@@ -814,7 +800,6 @@ function onTouchMove(e) {
 
 function onTouchEnd() {
   document.removeEventListener('touchmove', onTouchMove);
-  document.removeEventListener('touchend',  onTouchEnd);
   ghost.style.display = 'none';
   document.querySelectorAll('.seat').forEach(s => s.classList.remove('dragging-source', 'drag-over'));
   if (lastOver) {
@@ -838,7 +823,7 @@ function doSwap(a, b) {
   setTimeout(() => {
     document.querySelectorAll(`.seat[data-idx="${a}"], .seat[data-idx="${b}"]`).forEach(s => {
       s.classList.add('popped');
-      setTimeout(() => s.classList.remove('popped'), 300);
+      setTimeout(() => s.classList.remove('popped'), 280);
     });
   }, 10);
   toast('✅ Yer değiştirildi!');
