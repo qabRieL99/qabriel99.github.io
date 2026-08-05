@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sınav Süre Takip</title>
+<style>
+  :root{
+    --bg:#0b0f14; --panel:#141b23; --panel2:#1c2530; --line:#28323e;
+    --text:#e8edf2; --muted:#8a97a5; --accent:#4fd1c5; --warn:#f0a94e; --danger:#f0616d;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; min-height:100vh; background:var(--bg); color:var(--text);
+    font-family:'Segoe UI',Roboto,Arial,sans-serif; padding:20px;
+    display:flex; justify-content:center;
+  }
+  .wrap{width:100%; max-width:560px;}
+  h1{font-size:20px; margin:0 0 4px; letter-spacing:.3px;}
+  .sub{color:var(--muted); font-size:13px; margin-bottom:18px;}
+
+  .tabs{display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;}
+  .tab{
+    flex:1; min-width:80px; padding:10px 8px; text-align:center; border-radius:10px;
+    background:var(--panel); border:1px solid var(--line); cursor:pointer;
+    font-size:14px; font-weight:600; color:var(--muted); transition:.15s;
+  }
+  .tab.active{background:var(--accent); color:#04211e; border-color:var(--accent);}
+
+  .card{
+    background:var(--panel); border:1px solid var(--line); border-radius:14px;
+    padding:18px; margin-bottom:14px;
+  }
+
+  .row{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:10px;}
+  .row label{font-size:13px; color:var(--muted);}
+  input[type="time"], input[type="number"]{
+    background:var(--panel2); border:1px solid var(--line); color:var(--text);
+    border-radius:8px; padding:8px 10px; font-size:14px; width:110px;
+  }
+
+  .sessions{display:flex; flex-direction:column; gap:8px; margin:10px 0;}
+  .session{
+    display:flex; align-items:center; justify-content:space-between;
+    background:var(--panel2); border:1px solid var(--line); border-radius:10px; padding:8px 12px;
+  }
+  .session.active{border-color:var(--accent); box-shadow:0 0 0 1px var(--accent) inset;}
+  .session .name{font-size:14px;}
+  .session .dur{display:flex; align-items:center; gap:6px; color:var(--muted); font-size:13px;}
+  .session .dur input{width:56px; padding:5px 6px;}
+
+  .startbtn{
+    width:100%; padding:12px; border:none; border-radius:10px; background:var(--accent);
+    color:#04211e; font-weight:700; font-size:15px; cursor:pointer; margin-top:6px;
+  }
+  .startbtn:active{transform:scale(.98);}
+  .resetbtn{
+    width:100%; padding:10px; border:1px solid var(--line); border-radius:10px; background:transparent;
+    color:var(--muted); font-size:13px; cursor:pointer; margin-top:8px;
+  }
+
+  .display{text-align:center; padding:22px 10px;}
+  .display .label{color:var(--muted); font-size:13px; margin-bottom:10px;}
+
+  .ring-wrap{position:relative; width:230px; height:230px; margin:0 auto;}
+  .ring-wrap svg{transform:rotate(-90deg); width:100%; height:100%;}
+  .ring-bg{fill:none; stroke:var(--panel2); stroke-width:14;}
+  .ring-progress{
+    fill:none; stroke:var(--accent); stroke-width:14; stroke-linecap:round;
+    transition:stroke-dashoffset 1s linear, stroke .3s;
+  }
+  .ring-progress.warn{stroke:var(--warn);}
+  .ring-progress.danger{stroke:var(--danger);}
+  .ring-center{
+    position:absolute; inset:0; display:flex; flex-direction:column;
+    align-items:center; justify-content:center;
+  }
+  .big{font-size:42px; font-weight:700; letter-spacing:1px; font-variant-numeric:tabular-nums;}
+  .big.warn{color:var(--warn);}
+  .big.danger{color:var(--danger); animation:pulse 1s infinite;}
+  .ring-sub{color:var(--muted); font-size:12px; margin-top:4px;}
+  @keyframes pulse{50%{opacity:.55;}}
+  .meta{display:flex; justify-content:space-between; margin-top:14px; font-size:13px; color:var(--muted);}
+  .meta b{color:var(--text); font-weight:600;}
+
+  .say{
+    margin-top:14px; padding:12px; background:var(--panel2); border-radius:10px;
+    font-size:14px; text-align:center; border:1px dashed var(--line);
+  }
+  .times{margin-top:12px; display:flex; flex-direction:column; gap:6px;}
+  .times .trow{
+    display:flex; justify-content:space-between; align-items:center;
+    background:var(--panel2); border:1px solid var(--line); border-radius:8px;
+    padding:8px 12px; font-size:13px;
+  }
+  .times .trow .tname{color:var(--text); font-weight:600;}
+  .times .trow .trange{color:var(--muted); font-variant-numeric:tabular-nums;}
+  .hidden{display:none;}
+  .note{font-size:12px; color:var(--muted); margin-top:6px; line-height:1.5;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Sınav Süre Takip</h1>
+  <div class="sub">Gözetmenlik için kalan süreyi hızlıca gör</div>
+
+  <div class="tabs">
+    <div class="tab active" data-exam="LGS">LGS</div>
+    <div class="tab" data-exam="TYT">TYT</div>
+    <div class="tab" data-exam="AYT">AYT</div>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label>Başlangıç saati</label>
+      <input type="time" id="startTime">
+    </div>
+    <div class="sessions" id="sessions"></div>
+    <div class="note">Süreler tahminidir; kurumunuzun resmi sınav kılavuzuyla karşılaştırıp gerekirse üstteki kutulardan düzenleyin.</div>
+    <button class="startbtn" id="startBtn">Sınavı Başlat</button>
+    <button class="resetbtn" id="resetBtn">Sıfırla</button>
+  </div>
+
+  <div class="card display hidden" id="displayCard">
+    <div class="label" id="activeLabel">Aktif bölüm</div>
+    <div class="ring-wrap">
+      <svg viewBox="0 0 200 200">
+        <circle class="ring-bg" cx="100" cy="100" r="88"></circle>
+        <circle class="ring-progress" id="ringProgress" cx="100" cy="100" r="88"></circle>
+      </svg>
+      <div class="ring-center">
+        <div class="big" id="bigTime">--:--</div>
+        <div class="ring-sub" id="ringSub">kalan süre</div>
+      </div>
+    </div>
+    <div class="meta">
+      <div>Toplam kalan: <b id="totalRemain">--:--</b></div>
+      <div>Bitiş: <b id="endClock">--:--</b></div>
+    </div>
+    <div class="say" id="sayText">Başlatınca öğrenciye söylenecek cümle burada görünecek.</div>
+    <div class="times hidden" id="sessionTimes"></div>
+  </div>
+</div>
+
+<script>
+const PRESETS = {
+  LGS: [
+    {name:"Sözel Bölüm", min:75},
+    {name:"Teneffüs", min:10},
+    {name:"Sayısal Bölüm", min:80},
+  ],
+  TYT: [
+    {name:"TYT Geneli", min:165},
+  ],
+  AYT: [
+    {name:"AYT Geneli", min:180},
+  ],
+};
+
+let currentExam = "LGS";
+let sessions = JSON.parse(JSON.stringify(PRESETS.LGS));
+let startTimestamp = null; // ms
+let timerHandle = null;
+
+const sessionsEl = document.getElementById('sessions');
+const startTimeInput = document.getElementById('startTime');
+const displayCard = document.getElementById('displayCard');
+const bigTime = document.getElementById('bigTime');
+const activeLabel = document.getElementById('activeLabel');
+const totalRemain = document.getElementById('totalRemain');
+const endClock = document.getElementById('endClock');
+const sayText = document.getElementById('sayText');
+const sessionTimes = document.getElementById('sessionTimes');
+const ringProgress = document.getElementById('ringProgress');
+const ringSub = document.getElementById('ringSub');
+const RING_R = 88;
+const RING_CIRC = 2 * Math.PI * RING_R;
+ringProgress.style.strokeDasharray = `${RING_CIRC}`;
+ringProgress.style.strokeDashoffset = `0`;
+
+function pad(n){ return String(n).padStart(2,'0'); }
+
+function nowHHMM(){
+  const d = new Date();
+  return pad(d.getHours())+':'+pad(d.getMinutes());
+}
+startTimeInput.value = nowHHMM();
+
+function renderSessions(){
+  sessionsEl.innerHTML = '';
+  sessions.forEach((s, i) => {
+    const div = document.createElement('div');
+    div.className = 'session';
+    div.dataset.idx = i;
+    div.innerHTML = `
+      <div class="name">${s.name}</div>
+      <div class="dur">
+        <input type="number" min="1" value="${s.min}" data-idx="${i}">
+        <span>dk</span>
+      </div>`;
+    sessionsEl.appendChild(div);
+  });
+  sessionsEl.querySelectorAll('input').forEach(inp => {
+    inp.addEventListener('input', e => {
+      const idx = +e.target.dataset.idx;
+      sessions[idx].min = Math.max(1, +e.target.value || 1);
+    });
+  });
+}
+renderSessions();
+
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    currentExam = tab.dataset.exam;
+    sessions = JSON.parse(JSON.stringify(PRESETS[currentExam]));
+    renderSessions();
+    stopTimer();
+  });
+});
+
+function totalMinutes(){
+  return sessions.reduce((a,s)=>a+s.min,0);
+}
+
+function renderSessionTimes(){
+  if(sessions.length <= 1){
+    sessionTimes.classList.add('hidden');
+    sessionTimes.innerHTML = '';
+    return;
+  }
+  let cursor = startTimestamp;
+  let html = '';
+  sessions.forEach(s => {
+    const start = new Date(cursor);
+    const end = new Date(cursor + s.min*60000);
+    const startStr = pad(start.getHours())+':'+pad(start.getMinutes());
+    const endStr = pad(end.getHours())+':'+pad(end.getMinutes());
+    html += `<div class="trow"><span class="tname">${s.name}</span><span class="trange">${startStr} – ${endStr}</span></div>`;
+    cursor += s.min*60000;
+  });
+  sessionTimes.innerHTML = html;
+  sessionTimes.classList.remove('hidden');
+}
+
+function startTimerFromNow(){
+  const [h,m] = startTimeInput.value.split(':').map(Number);
+  const d = new Date();
+  d.setHours(h, m, 0, 0);
+  // if given start time is more than a few hours in the future vs now, assume it's meant as today anyway
+  startTimestamp = d.getTime();
+  displayCard.classList.remove('hidden');
+  renderSessionTimes();
+  tick();
+  if(timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(tick, 1000);
+}
+
+function stopTimer(){
+  if(timerHandle) clearInterval(timerHandle);
+  timerHandle = null;
+  startTimestamp = null;
+  displayCard.classList.add('hidden');
+  ringProgress.style.strokeDashoffset = `0`;
+  ringProgress.classList.remove('warn','danger');
+  sessionTimes.classList.add('hidden');
+  sessionTimes.innerHTML = '';
+}
+
+function fmt(ms){
+  if(ms < 0) ms = 0;
+  const totalSec = Math.floor(ms/1000);
+  const h = Math.floor(totalSec/3600);
+  const m = Math.floor((totalSec%3600)/60);
+  const s = totalSec%60;
+  return h>0 ? `${h}:${pad(m)}:${pad(s)}` : `${pad(m)}:${pad(s)}`;
+}
+
+function tick(){
+  const now = Date.now();
+  const elapsedMs = now - startTimestamp;
+  const totalMs = totalMinutes() * 60000;
+  const remainTotalMs = totalMs - elapsedMs;
+
+  const endDate = new Date(startTimestamp + totalMs);
+  endClock.textContent = pad(endDate.getHours())+':'+pad(endDate.getMinutes());
+  totalRemain.textContent = fmt(remainTotalMs);
+
+  // find active session
+  let cursor = 0;
+  let active = sessions[sessions.length-1];
+  let activeRemainMs = 0;
+  let found = false;
+  for(const s of sessions){
+    const sMs = s.min*60000;
+    if(elapsedMs < cursor + sMs){
+      active = s;
+      activeRemainMs = (cursor+sMs) - elapsedMs;
+      found = true;
+      break;
+    }
+    cursor += sMs;
+  }
+  if(!found){
+    active = {name:"Sınav Bitti"};
+    activeRemainMs = 0;
+  }
+
+  document.querySelectorAll('.session').forEach((el,i)=>{
+    el.classList.toggle('active', found && sessions[i]===active);
+  });
+
+  activeLabel.textContent = active.name;
+  bigTime.textContent = found ? fmt(activeRemainMs) : "00:00";
+  bigTime.classList.remove('warn','danger');
+  ringProgress.classList.remove('warn','danger');
+
+  const activeTotalMs = found ? active.min*60000 : 1;
+  const fractionLeft = found ? Math.max(0, Math.min(1, activeRemainMs/activeTotalMs)) : 0;
+  ringProgress.style.strokeDashoffset = `${RING_CIRC * (1 - fractionLeft)}`;
+  ringSub.textContent = found ? active.name : "tamamlandı";
+
+  if(found){
+    if(activeRemainMs <= 60000){ bigTime.classList.add('danger'); ringProgress.classList.add('danger'); }
+    else if(activeRemainMs <= 5*60000){ bigTime.classList.add('warn'); ringProgress.classList.add('warn'); }
+  } else {
+    bigTime.classList.add('danger');
+    ringProgress.classList.add('danger');
+  }
+
+  const remMin = Math.ceil(activeRemainMs/60000);
+  if(!found){
+    sayText.textContent = "Sınav süresi tamamlandı.";
+  } else if(active.name.toLowerCase().includes('teneffüs') || active.name.toLowerCase().includes('ara')){
+    sayText.textContent = `Teneffüse ${remMin} dakika kaldı.`;
+  } else {
+    sayText.textContent = `Sınavın bitişine ${remMin} dakika kaldı.`;
+  }
+}
+
+document.getElementById('startBtn').addEventListener('click', startTimerFromNow);
+document.getElementById('resetBtn').addEventListener('click', () => {
+  stopTimer();
+  startTimeInput.value = nowHHMM();
+});
+</script>
+</body>
+</html>
