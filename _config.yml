@@ -1,8 +1,6 @@
-title: "Türkçe Çevirilerim"
-description: "Oyun ve mod çevirilerim ile küçük web araçları — QabRieL99"
-theme: jekyll-theme-slate
-url: "https://qabriel99.github.io"
+title: "Projeler"
+remote_theme: pages-themes/midnight@v0.2.0
+plugins:
+- jekyll-remote-theme # add this line to the plugins list if you already have oneurl: "https://qabriel99.github.io"
 baseurl: ""
 lang: "tr"
-author:
-  name: "QabRieL99"
