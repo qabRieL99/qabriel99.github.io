@@ -1,6 +1,6 @@
 ### Yaptığım Çeviriler
 
-<a href="https://github.com/qabRieL99/HalfLifeSerisiTurkce"><img src="https://cdn.steamgriddb.com/grid/ccb9b7ccbb6cebc7f0c81a1ec0879cd2.png" style="width=460" height="260"></a>
+<a href="https://github.com/qabRieL99/SimHalfLifeSerisiTurkce"><img src="https://cdn.steamgriddb.com/grid/ccb9b7ccbb6cebc7f0c81a1ec0879cd2.png" style="width=460" height="260"></a>
 <a href="https://github.com/qabRieL99/TerrariaTurkish"><img src="https://cdn.steamgriddb.com/grid/b70188491798e86129a57180426213ff.png" style="width=460" height="260"></a>
 <a href="https://github.com/qabRieL99/SuperliminalTurkish"><img src="https://cdn.steamgriddb.com/grid/7491337a7c702ea986a7832fd99bad2c.png" style="width=460" height="260"></a>
 <a href="https://github.com/qabRieL99/AntichamberTurkce"><img src="https://cdn.steamgriddb.com/grid/99d18233fa4bfd1f0f0a4b3838036a1c.png" style="width=460" height="260"></a>
@@ -11,8 +11,13 @@
 <a href="https://github.com/qabRieL99/HalfLifeAlyxTurkce"><img src="https://cdn.steamgriddb.com/grid/a856c1ac95cc67d7a227f098f6705862.jpg" style="width=460" height="260"></a>
 
 
-### Half-Life: Combine OverWiki çevirilerim:
+#### Half-Life: Combine OverWiki çevirilerim:
 [Çeviriler](https://combineoverwiki.net/wiki/User:QabRieL)
 
-### Half-Life: Map Selector:
+#### Half-Life: Map Selector:
 [Half-Life: Map Selector](https://qabriel99.github.io/selector.html)
+
+#### Kullanışlı ufak araçlar:
+⛽ [Basit akaryakıt hesaplayıcısı](https://qabriel99.github.io/calculator.html)
+
+🪑 [Oturma düzeni oluşturucusu](https://qabriel99.github.io/seating.html)
