@@ -252,9 +252,24 @@ function startTimerFromNow(){
   startTimestamp = d.getTime();
   displayCard.classList.remove('hidden');
   renderSessionTimes();
+  saveState();
   tick();
   if(timerHandle) clearInterval(timerHandle);
   timerHandle = setInterval(tick, 1000);
+}
+
+const STORAGE_KEY = 'sinavSureTakip';
+
+function saveState(){
+  localStorage.setItem(STORAGE_KEY, JSON.stringify({
+    exam: currentExam,
+    sessions: sessions,
+    startTimestamp: startTimestamp,
+  }));
+}
+
+function clearState(){
+  localStorage.removeItem(STORAGE_KEY);
 }
 
 function stopTimer(){
@@ -266,6 +281,7 @@ function stopTimer(){
   ringProgress.classList.remove('warn','danger');
   sessionTimes.classList.add('hidden');
   sessionTimes.innerHTML = '';
+  clearState();
 }
 
 function fmt(ms){
@@ -344,6 +360,35 @@ document.getElementById('resetBtn').addEventListener('click', () => {
   stopTimer();
   startTimeInput.value = nowHHMM();
 });
+
+// Sekme değişince veya telefon kilidi açılınca süreyi anında tazele
+document.addEventListener('visibilitychange', () => {
+  if(!document.hidden && startTimestamp) tick();
+});
+
+// Sayfa yeniden açıldığında (uygulama değişimi / tarayıcı kapanması) kayıtlı sınavı geri yükle
+function restoreState(){
+  const raw = localStorage.getItem(STORAGE_KEY);
+  if(!raw) return;
+  let saved;
+  try{ saved = JSON.parse(raw); } catch(e){ return; }
+  if(!saved || !saved.startTimestamp || !saved.sessions) return;
+
+  currentExam = saved.exam;
+  sessions = saved.sessions;
+  startTimestamp = saved.startTimestamp;
+
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.exam === currentExam);
+  });
+  renderSessions();
+  displayCard.classList.remove('hidden');
+  renderSessionTimes();
+  tick();
+  if(timerHandle) clearInterval(timerHandle);
+  timerHandle = setInterval(tick, 1000);
+}
+restoreState();
 </script>
 </body>
 </html>
