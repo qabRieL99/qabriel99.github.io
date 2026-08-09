@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1">
+<title>Oto Elektrik Takip</title>
+<style>
+  :root{
+    --bg:#15181c;
+    --panel:#1e2227;
+    --panel-2:#262b31;
+    --line:#333941;
+    --text:#e8eaed;
+    --muted:#9aa3ad;
+    --amber:#f5a623;
+    --amber-dim:#7a5716;
+    --blue:#3ba7ff;
+    --green:#2fb344;
+    --red:#e5484d;
+    --mono:'SF Mono',ui-monospace,Menlo,Consolas,monospace;
+    --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Arial,sans-serif;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:var(--bg);
+    color:var(--text);
+    font-family:var(--sans);
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:60px;
+  }
+  .voltage{
+    height:3px;
+    background:linear-gradient(90deg,var(--amber-dim),var(--amber),var(--blue),var(--amber-dim));
+    background-size:200% 100%;
+    animation:flow 6s linear infinite;
+  }
+  @keyframes flow{0%{background-position:0% 0;}100%{background-position:200% 0;}}
+  header{
+    padding:18px 16px 0 16px;
+    position:sticky;top:0;background:var(--bg);z-index:20;
+  }
+  .shop-row{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .shop-row .bolt{color:var(--amber);font-size:22px;}
+  #shopName{
+    background:transparent;border:none;color:var(--text);
+    font-size:19px;font-weight:700;letter-spacing:.2px;
+    padding:2px 4px;border-radius:6px;flex:1;min-width:0;
+  }
+  #shopName:focus{outline:1px solid var(--amber-dim);background:var(--panel);}
+  .tabs{display:flex;gap:4px;border-bottom:1px solid var(--line);overflow-x:auto;}
+  .tab{
+    padding:10px 14px;font-size:14px;color:var(--muted);cursor:pointer;
+    border-bottom:2px solid transparent;white-space:nowrap;user-select:none;
+  }
+  .tab.active{color:var(--amber);border-bottom-color:var(--amber);font-weight:600;}
+  main{padding:16px;max-width:900px;margin:0 auto;}
+  .view{display:none;}
+  .view.active{display:block;}
+
+  .card{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:16px;margin-bottom:16px;
+  }
+  .card h2{margin:0 0 12px 0;font-size:15px;color:var(--amber);font-weight:600;
+    text-transform:uppercase;letter-spacing:.6px;}
+  .grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+  .grid .full{grid-column:1/-1;}
+  label{display:block;font-size:12px;color:var(--muted);margin-bottom:4px;}
+  input,select,textarea{
+    width:100%;background:var(--panel-2);border:1px solid var(--line);
+    color:var(--text);padding:9px 10px;border-radius:8px;font-size:14.5px;
+    font-family:var(--sans);
+  }
+  textarea{resize:vertical;min-height:44px;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber-dim);}
+  .field{margin-bottom:10px;}
+  .btn{
+    display:inline-flex;align-items:center;justify-content:center;gap:6px;
+    background:var(--amber);color:#241a04;border:none;font-weight:700;
+    padding:10px 16px;border-radius:8px;cursor:pointer;font-size:14px;
+  }
+  .btn:active{transform:translateY(1px);}
+  .btn.secondary{background:var(--panel-2);color:var(--text);border:1px solid var(--line);font-weight:600;}
+  .btn.danger{background:transparent;color:var(--red);border:1px solid #5a2426;}
+  .btn.small{padding:6px 10px;font-size:12.5px;}
+  .btn.block{width:100%;margin-top:4px;}
+  .row-actions{display:flex;gap:8px;margin-top:10px;}
+
+  .toolbar{display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;align-items:center;}
+  .toolbar input[type=search]{flex:1;min-width:140px;}
+  .toolbar select{width:auto;}
+
+  /* Customer accordion groups */
+  .customer-group{background:var(--panel);border:1px solid var(--line);border-radius:12px;margin-bottom:10px;overflow:hidden;}
+  .group-header{display:flex;justify-content:space-between;align-items:center;padding:14px;cursor:pointer;gap:10px;}
+  .group-header:active{background:var(--panel-2);}
+  .group-main{min-width:0;flex:1;}
+  .visit-count{color:var(--muted);font-weight:400;font-size:12px;}
+  .group-phone{color:var(--muted);font-size:12.5px;margin-top:2px;}
+  .group-right{display:flex;align-items:center;gap:10px;flex-shrink:0;}
+  .chevron{color:var(--muted);transition:transform .2s;display:inline-block;font-size:14px;}
+  .chevron.open{transform:rotate(180deg);}
+  .group-body{padding:0 14px 14px 14px;border-top:1px solid var(--line);}
+  .group-body .job-card{margin-top:10px;margin-bottom:0;background:var(--panel-2);}
+
+  .badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .badge{font-size:10.5px;font-weight:700;padding:2px 8px;border-radius:20px;text-transform:uppercase;letter-spacing:.3px;white-space:nowrap;}
+  .badge-aku{background:#0c2f45;color:var(--blue);}
+  .badge-tamir{background:#3a2c0c;color:var(--amber);}
+  .badge-parca{background:#123320;color:var(--green);}
+
+  .job-card{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;
+    padding:14px;margin-bottom:10px;position:relative;
+  }
+  .job-card.paid{border-left:3px solid var(--green);}
+  .job-card.debt{border-left:3px solid var(--red);}
+  .job-card.partial{border-left:3px solid var(--amber);}
+  .job-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+  .job-name{font-weight:700;font-size:15.5px;}
+  .job-date{color:var(--muted);font-size:12px;margin-top:2px;}
+  .job-vehicle{color:var(--blue);font-size:12.5px;margin-top:2px;}
+  .job-desc{margin-top:8px;font-size:13.5px;color:var(--text);line-height:1.45;}
+  .job-desc .label{color:var(--muted);}
+  .job-nums{display:flex;gap:14px;margin-top:10px;font-family:var(--mono);font-size:13px;flex-wrap:wrap;}
+  .job-nums div span{display:block;color:var(--muted);font-family:var(--sans);font-size:11px;}
+  .status-pill{
+    font-size:11px;font-weight:700;padding:3px 9px;border-radius:20px;white-space:nowrap;
+  }
+  .status-pill.paid{background:#123320;color:var(--green);}
+  .status-pill.debt{background:#3a1516;color:var(--red);}
+  .status-pill.partial{background:#3a2c0c;color:var(--amber);}
+  .job-actions{display:flex;gap:8px;margin-top:10px;}
+
+  table{width:100%;border-collapse:collapse;font-size:13px;}
+  th,td{text-align:left;padding:8px 6px;border-bottom:1px solid var(--line);}
+  th{color:var(--muted);font-weight:600;font-size:11.5px;text-transform:uppercase;letter-spacing:.4px;}
+  td.num{font-family:var(--mono);}
+
+  .stats{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px;}
+  @media(min-width:520px){.stats{grid-template-columns:repeat(4,1fr);}}
+  .stat{
+    background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px;
+  }
+  .stat .v{font-family:var(--mono);font-size:20px;font-weight:700;}
+  .stat .l{color:var(--muted);font-size:11.5px;margin-top:4px;text-transform:uppercase;letter-spacing:.4px;}
+  .stat.debt .v{color:var(--red);}
+  .stat.paid .v{color:var(--green);}
+  .stat.amber .v{color:var(--amber);}
+
+  .empty{color:var(--muted);text-align:center;padding:30px 10px;font-size:13.5px;}
+  .backup-row{display:flex;gap:8px;flex-wrap:wrap;}
+  .backup-row .btn{flex:1;min-width:130px;}
+  #importFile{display:none;}
+
+  @media(max-width:480px){
+    .grid{grid-template-columns:1fr;}
+  }
+</style>
+</head>
+<body>
+
+<div class="voltage"></div>
+<header>
+  <div class="shop-row">
+    <span class="bolt">⚡</span>
+    <input id="shopName" value="Oto Elektrik Dükkanım" spellcheck="false">
+  </div>
+  <div class="tabs">
+    <div class="tab active" data-view="jobs">İşlemler</div>
+    <div class="tab" data-view="customers">Müşteriler</div>
+    <div class="tab" data-view="parts">Parça Stok</div>
+    <div class="tab" data-view="summary">Özet</div>
+    <div class="tab" data-view="backup">Yedekle</div>
+  </div>
+</header>
+
+<main>
+
+  <!-- İŞLEMLER -->
+  <section id="view-jobs" class="view active">
+    <div class="card">
+      <h2 id="jobFormTitle">Yeni İş Kaydı</h2>
+      <input type="hidden" id="jobId">
+      <div class="grid">
+        <div class="field">
+          <label>Tarih</label>
+          <input type="date" id="jobDate">
+        </div>
+        <div class="field">
+          <label>Müşteri Adı</label>
+          <input type="text" id="jobCustomer" placeholder="Ad Soyad">
+        </div>
+        <div class="field">
+          <label>Telefon</label>
+          <input type="tel" id="jobPhone" inputmode="numeric" placeholder="0555 123 45 67">
+        </div>
+        <div class="field">
+          <label>Araç (Marka/Model)</label>
+          <input type="text" id="jobVehicle" placeholder="Örn: Fiat Fiorino 1.3 Multijet">
+        </div>
+        <div class="field full">
+          <label>Yapılan İşlem</label>
+          <textarea id="jobWork" placeholder="Örn: Akü değişimi, alternatör tamiri, marş motoru arızası..."></textarea>
+        </div>
+        <div class="field full">
+          <label>Takılan / Kullanılan Parça(lar)</label>
+          <textarea id="jobParts" placeholder="Örn: 60Ah akü, alternatör bileziği, sigorta seti"></textarea>
+        </div>
+        <div class="field">
+          <label>Toplam Ücret (₺)</label>
+          <input type="number" id="jobTotal" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Alınan Ödeme (₺)</label>
+          <input type="number" id="jobPaid" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="field full">
+          <label>Not</label>
+          <input type="text" id="jobNote" placeholder="İsteğe bağlı not">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn" id="jobSaveBtn" onclick="saveJob()">Kaydet</button>
+        <button class="btn secondary" id="jobCancelBtn" onclick="resetJobForm()" style="display:none;">Vazgeç</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- MÜŞTERİLER -->
+  <section id="view-customers" class="view">
+    <div class="toolbar">
+      <input type="search" id="jobSearch" placeholder="Müşteri, telefon, işlem veya parça ara..." oninput="renderJobs()">
+      <select id="jobFilter" onchange="renderJobs()">
+        <option value="all">Tümü</option>
+        <option value="debt">Borçlu</option>
+        <option value="partial">Kısmi Ödendi</option>
+        <option value="paid">Ödendi</option>
+      </select>
+    </div>
+
+    <div id="jobList"></div>
+  </section>
+
+  <!-- PARÇA STOK -->
+  <section id="view-parts" class="view">
+    <div class="card">
+      <h2 id="partFormTitle">Yeni Parça Alımı</h2>
+      <input type="hidden" id="partId">
+      <div class="grid">
+        <div class="field">
+          <label>Tarih</label>
+          <input type="date" id="partDate">
+        </div>
+        <div class="field">
+          <label>Parça Adı</label>
+          <input type="text" id="partName" placeholder="Örn: 60Ah Akü">
+        </div>
+        <div class="field">
+          <label>Marka / Model</label>
+          <input type="text" id="partBrand" placeholder="Örn: Mutlu, Bosch...">
+        </div>
+        <div class="field">
+          <label>Tedarikçi</label>
+          <input type="text" id="partSupplier" placeholder="Nereden alındı">
+        </div>
+        <div class="field">
+          <label>Adet</label>
+          <input type="number" id="partQty" min="0" step="1" value="1">
+        </div>
+        <div class="field">
+          <label>Alış Fiyatı (₺ / adet)</label>
+          <input type="number" id="partBuy" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="field">
+          <label>Satış Fiyatı (₺ / adet)</label>
+          <input type="number" id="partSell" min="0" step="0.01" placeholder="0">
+        </div>
+        <div class="field full">
+          <label>Not</label>
+          <input type="text" id="partNote" placeholder="İsteğe bağlı not">
+        </div>
+      </div>
+      <div class="row-actions">
+        <button class="btn" id="partSaveBtn" onclick="savePart()">Kaydet</button>
+        <button class="btn secondary" id="partCancelBtn" onclick="resetPartForm()" style="display:none;">Vazgeç</button>
+      </div>
+    </div>
+
+    <div class="toolbar">
+      <input type="search" id="partSearch" placeholder="Parça ara..." oninput="renderParts()">
+    </div>
+
+    <div class="card" style="overflow-x:auto;">
+      <table id="partTable">
+        <thead>
+          <tr>
+            <th>Parça</th><th>Marka</th><th>Adet</th><th>Alış</th><th>Satış</th><th></th>
+          </tr>
+        </thead>
+        <tbody id="partTableBody"></tbody>
+      </table>
+      <div id="partEmpty" class="empty" style="display:none;">Henüz parça kaydı yok.</div>
+    </div>
+  </section>
+
+  <!-- ÖZET -->
+  <section id="view-summary" class="view">
+    <div class="stats">
+      <div class="stat amber"><div class="v" id="statTotalRevenue">₺0</div><div class="l">Toplam Ciro</div></div>
+      <div class="stat paid"><div class="v" id="statTotalCollected">₺0</div><div class="l">Tahsil Edilen</div></div>
+      <div class="stat debt"><div class="v" id="statTotalDebt">₺0</div><div class="l">Toplam Alacak</div></div>
+      <div class="stat"><div class="v" id="statJobCount">0</div><div class="l">Toplam İş Sayısı</div></div>
+    </div>
+    <div class="card">
+      <h2>Borçlu Müşteriler</h2>
+      <div id="debtList"></div>
+    </div>
+    <div class="card">
+      <h2>Parça Stok Değeri</h2>
+      <div class="job-nums">
+        <div><span>Alış Değeri Toplamı</span><span id="statStockBuyValue" style="font-family:var(--mono);font-size:16px;">₺0</span></div>
+        <div><span>Satış Değeri Toplamı</span><span id="statStockSellValue" style="font-family:var(--mono);font-size:16px;">₺0</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- YEDEKLE -->
+  <section id="view-backup" class="view">
+    <div class="card">
+      <h2>Veri Yedekleme</h2>
+      <p style="color:var(--muted);font-size:13px;line-height:1.5;">
+        Tüm veriler bu cihazın tarayıcısında (localStorage) saklanır. Tarayıcı verilerini temizlersen kayıtların silinir,
+        bu yüzden düzenli olarak yedek almanı öneririz.
+      </p>
+      <div class="backup-row">
+        <button class="btn" onclick="exportData()">Yedeği İndir (.json)</button>
+        <button class="btn secondary" onclick="document.getElementById('importFile').click()">Yedekten Geri Yükle</button>
+      </div>
+      <input type="file" id="importFile" accept="application/json" onchange="importData(event)">
+    </div>
+    <div class="card">
+      <h2>Tehlikeli Bölge</h2>
+      <button class="btn danger block" onclick="clearAll()">Tüm Verileri Sil</button>
+    </div>
+  </section>
+
+</main>
+
+<script>
+const JOBS_KEY = 'oto_elektrik_jobs_v1';
+const PARTS_KEY = 'oto_elektrik_parts_v1';
+const SHOP_KEY = 'oto_elektrik_shop_name_v1';
+
+let jobs = JSON.parse(localStorage.getItem(JOBS_KEY) || '[]');
+let parts = JSON.parse(localStorage.getItem(PARTS_KEY) || '[]');
+let expandedGroups = new Set();
+
+function saveJobs(){ localStorage.setItem(JOBS_KEY, JSON.stringify(jobs)); }
+function saveParts(){ localStorage.setItem(PARTS_KEY, JSON.stringify(parts)); }
+
+function money(n){
+  n = Number(n)||0;
+  return '₺' + n.toLocaleString('tr-TR', {minimumFractionDigits:0, maximumFractionDigits:2});
+}
+function todayStr(){ return new Date().toISOString().slice(0,10); }
+function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+// ---- Text formatting helpers ----
+function toTitleCaseTR(str){
+  str = (str||'').trim().replace(/\s+/g,' ');
+  if(!str) return '';
+  return str.toLocaleLowerCase('tr-TR').replace(/(^|[\s'-])\S/g, c => c.toLocaleUpperCase('tr-TR'));
+}
+function formatPhone(v){
+  let digits = (v||'').replace(/\D/g,'').slice(0,11);
+  let out = '';
+  if(digits.length>0) out += digits.slice(0,4);
+  if(digits.length>4) out += ' ' + digits.slice(4,7);
+  if(digits.length>7) out += ' ' + digits.slice(7,9);
+  if(digits.length>9) out += ' ' + digits.slice(9,11);
+  return out;
+}
+
+// ---- Badges ----
+const BADGE_DEFS = [
+  {key:'akü', label:'Akü', cls:'badge-aku'},
+  {key:'tamir', label:'Tamir', cls:'badge-tamir'},
+  {key:'parça', label:'Parça', cls:'badge-parca'},
+];
+function getBadges(text){
+  const t = (text||'').toLocaleLowerCase('tr-TR');
+  return BADGE_DEFS.filter(b => t.includes(b.key));
+}
+
+// ---- Tabs ----
+document.querySelectorAll('.tab').forEach(t=>{
+  t.addEventListener('click', ()=>{
+    document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+    document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
+    t.classList.add('active');
+    document.getElementById('view-'+t.dataset.view).classList.add('active');
+    if(t.dataset.view==='summary') renderSummary();
+    if(t.dataset.view==='parts') renderParts();
+    if(t.dataset.view==='customers') renderJobs();
+  });
+});
+
+// ---- Shop name ----
+const shopNameEl = document.getElementById('shopName');
+shopNameEl.value = localStorage.getItem(SHOP_KEY) || 'Oto Elektrik Dükkanım';
+shopNameEl.addEventListener('input', ()=> localStorage.setItem(SHOP_KEY, shopNameEl.value));
+
+// ---- JOBS ----
+document.getElementById('jobDate').value = todayStr();
+
+document.getElementById('jobCustomer').addEventListener('blur', function(){
+  this.value = toTitleCaseTR(this.value);
+});
+document.getElementById('jobPhone').addEventListener('input', function(){
+  this.value = formatPhone(this.value);
+});
+
+function jobStatus(job){
+  const total = Number(job.total)||0;
+  const paid = Number(job.paid)||0;
+  if(paid <= 0 && total > 0) return 'debt';
+  if(paid >= total) return 'paid';
+  return 'partial';
+}
+function statusLabel(s){
+  return s==='paid' ? 'Ödendi' : s==='debt' ? 'Borçlu' : 'Kısmi Ödendi';
+}
+
+function saveJob(){
+  const customerRaw = document.getElementById('jobCustomer').value.trim();
+  if(!customerRaw){ alert('Müşteri adı gerekli.'); return; }
+  const id = document.getElementById('jobId').value || uid();
+  const job = {
+    id,
+    date: document.getElementById('jobDate').value || todayStr(),
+    customer: toTitleCaseTR(customerRaw),
+    phone: formatPhone(document.getElementById('jobPhone').value),
+    vehicle: document.getElementById('jobVehicle').value.trim(),
+    work: document.getElementById('jobWork').value.trim(),
+    parts: document.getElementById('jobParts').value.trim(),
+    total: parseFloat(document.getElementById('jobTotal').value)||0,
+    paid: parseFloat(document.getElementById('jobPaid').value)||0,
+    note: document.getElementById('jobNote').value.trim(),
+  };
+  const idx = jobs.findIndex(j=>j.id===id);
+  if(idx>-1) jobs[idx]=job; else jobs.unshift(job);
+  saveJobs();
+  resetJobForm();
+  renderJobs();
+}
+
+function resetJobForm(){
+  document.getElementById('jobId').value='';
+  document.getElementById('jobDate').value=todayStr();
+  document.getElementById('jobCustomer').value='';
+  document.getElementById('jobPhone').value='';
+  document.getElementById('jobVehicle').value='';
+  document.getElementById('jobWork').value='';
+  document.getElementById('jobParts').value='';
+  document.getElementById('jobTotal').value='';
+  document.getElementById('jobPaid').value='';
+  document.getElementById('jobNote').value='';
+  document.getElementById('jobFormTitle').textContent='Yeni İş Kaydı';
+  document.getElementById('jobCancelBtn').style.display='none';
+}
+
+function editJob(id){
+  const job = jobs.find(j=>j.id===id);
+  if(!job) return;
+  document.getElementById('jobId').value=job.id;
+  document.getElementById('jobDate').value=job.date;
+  document.getElementById('jobCustomer').value=job.customer;
+  document.getElementById('jobPhone').value=job.phone;
+  document.getElementById('jobVehicle').value=job.vehicle;
+  document.getElementById('jobWork').value=job.work;
+  document.getElementById('jobParts').value=job.parts;
+  document.getElementById('jobTotal').value=job.total;
+  document.getElementById('jobPaid').value=job.paid;
+  document.getElementById('jobNote').value=job.note;
+  document.getElementById('jobFormTitle').textContent='İş Kaydını Düzenle';
+  document.getElementById('jobCancelBtn').style.display='inline-flex';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function quickAddFor(customer, phone){
+  resetJobForm();
+  document.getElementById('jobCustomer').value = customer;
+  document.getElementById('jobPhone').value = phone;
+  document.querySelector('.tab[data-view="jobs"]').click();
+  window.scrollTo({top:0, behavior:'smooth'});
+  document.getElementById('jobWork').focus();
+}
+
+function deleteJob(id){
+  if(!confirm('Bu iş kaydını silmek istediğine emin misin?')) return;
+  jobs = jobs.filter(j=>j.id!==id);
+  saveJobs();
+  renderJobs();
+}
+
+function markPaidFull(id){
+  const job = jobs.find(j=>j.id===id);
+  if(!job) return;
+  job.paid = job.total;
+  saveJobs();
+  renderJobs();
+}
+
+function renderJobCard(j){
+  const status = jobStatus(j);
+  const remaining = (Number(j.total)||0) - (Number(j.paid)||0);
+  return `
+    <div class="job-card ${status}">
+      <div class="job-top">
+        <div>
+          <div class="job-date">${formatDate(j.date)}</div>
+          ${j.vehicle ? `<div class="job-vehicle">${escapeHtml(j.vehicle)}</div>` : ''}
+        </div>
+        <span class="status-pill ${status}">${statusLabel(status)}</span>
+      </div>
+      ${j.work ? `<div class="job-desc"><span class="label">İşlem:</span> ${escapeHtml(j.work)}</div>` : ''}
+      ${j.parts ? `<div class="job-desc"><span class="label">Parça:</span> ${escapeHtml(j.parts)}</div>` : ''}
+      ${j.note ? `<div class="job-desc"><span class="label">Not:</span> ${escapeHtml(j.note)}</div>` : ''}
+      <div class="job-nums">
+        <div><span>Ücret</span>${money(j.total)}</div>
+        <div><span>Alınan</span>${money(j.paid)}</div>
+        <div><span>Kalan</span><span style="color:${remaining>0?'var(--red)':'var(--green)'}">${money(remaining)}</span></div>
+      </div>
+      <div class="job-actions">
+        <button class="btn small secondary" onclick="editJob('${j.id}')">Düzenle</button>
+        ${remaining>0 ? `<button class="btn small" onclick="markPaidFull('${j.id}')">Tamamını Öde</button>` : ''}
+        <button class="btn small danger" onclick="deleteJob('${j.id}')">Sil</button>
+      </div>
+    </div>`;
+}
+
+function groupJobs(list){
+  const map = new Map();
+  list.forEach(j=>{
+    const key = (j.customer||'').trim().toLocaleLowerCase('tr-TR');
+    if(!map.has(key)) map.set(key, []);
+    map.get(key).push(j);
+  });
+  const groups = [];
+  map.forEach((jobsArr, key)=>{
+    jobsArr.sort((a,b)=> (b.date||'').localeCompare(a.date||''));
+    const totalRemaining = jobsArr.reduce((s,j)=> s + Math.max((Number(j.total)||0)-(Number(j.paid)||0),0), 0);
+    const hasDebt = totalRemaining > 0;
+    groups.push({
+      key,
+      customer: jobsArr[0].customer,
+      phone: jobsArr[0].phone,
+      jobs: jobsArr,
+      totalRemaining,
+      hasDebt,
+      lastDate: jobsArr[0].date || ''
+    });
+  });
+  groups.sort((a,b)=>{
+    if(a.hasDebt !== b.hasDebt) return a.hasDebt ? -1 : 1;
+    if(a.hasDebt) return b.totalRemaining - a.totalRemaining;
+    return (b.lastDate||'').localeCompare(a.lastDate||'');
+  });
+  return groups;
+}
+
+function renderJobs(){
+  const search = document.getElementById('jobSearch').value.trim().toLocaleLowerCase('tr-TR');
+  const filter = document.getElementById('jobFilter').value;
+  const list = document.getElementById('jobList');
+  let filtered = jobs.filter(j=>{
+    const haystack = [j.customer,j.vehicle,j.phone,j.work,j.parts].join(' ').toLocaleLowerCase('tr-TR');
+    const matchesSearch = !search || haystack.includes(search);
+    const status = jobStatus(j);
+    const matchesFilter = filter==='all' || filter===status;
+    return matchesSearch && matchesFilter;
+  });
+  if(filtered.length===0){
+    list.innerHTML = '<div class="empty">Kayıt bulunamadı.</div>';
+    return;
+  }
+  const isFiltering = !!search || filter!=='all';
+  const groups = groupJobs(filtered);
+  list.innerHTML = groups.map(g=>{
+    const expanded = isFiltering || expandedGroups.has(g.key);
+    const badges = getBadges(g.jobs.map(j=>j.work+' '+j.parts).join(' '));
+    return `
+    <div class="customer-group">
+      <div class="group-header" data-key="${escapeHtml(g.key)}">
+        <div class="group-main">
+          <div class="job-name">${escapeHtml(g.customer)} <span class="visit-count">(${g.jobs.length} işlem)</span></div>
+          ${g.phone ? `<div class="group-phone">${escapeHtml(g.phone)}</div>` : ''}
+          ${badges.length ? `<div class="badges">${badges.map(b=>`<span class="badge ${b.cls}">${b.label}</span>`).join('')}</div>` : ''}
+        </div>
+        <div class="group-right">
+          <span class="status-pill ${g.hasDebt?'debt':'paid'}">${g.hasDebt ? money(g.totalRemaining)+' borç' : 'Ödendi'}</span>
+          <span class="chevron ${expanded?'open':''}">▾</span>
+        </div>
+      </div>
+      <div class="group-body" style="display:${expanded?'block':'none'}">
+        ${g.jobs.map(j=>renderJobCard(j)).join('')}
+        <button class="btn small secondary block quick-add-btn" data-customer="${escapeHtml(g.customer)}" data-phone="${escapeHtml(g.phone||'')}">+ Bu müşteriye yeni işlem ekle</button>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+document.getElementById('jobList').addEventListener('click', function(e){
+  const header = e.target.closest('.group-header');
+  if(header){
+    const key = header.dataset.key;
+    if(expandedGroups.has(key)) expandedGroups.delete(key); else expandedGroups.add(key);
+    renderJobs();
+    return;
+  }
+  const quickBtn = e.target.closest('.quick-add-btn');
+  if(quickBtn){
+    quickAddFor(quickBtn.dataset.customer, quickBtn.dataset.phone);
+    return;
+  }
+});
+
+// ---- PARTS ----
+document.getElementById('partDate').value = todayStr();
+
+function savePart(){
+  const name = document.getElementById('partName').value.trim();
+  if(!name){ alert('Parça adı gerekli.'); return; }
+  const id = document.getElementById('partId').value || uid();
+  const part = {
+    id,
+    date: document.getElementById('partDate').value || todayStr(),
+    name,
+    brand: document.getElementById('partBrand').value.trim(),
+    supplier: document.getElementById('partSupplier').value.trim(),
+    qty: parseFloat(document.getElementById('partQty').value)||0,
+    buy: parseFloat(document.getElementById('partBuy').value)||0,
+    sell: parseFloat(document.getElementById('partSell').value)||0,
+    note: document.getElementById('partNote').value.trim(),
+  };
+  const idx = parts.findIndex(p=>p.id===id);
+  if(idx>-1) parts[idx]=part; else parts.unshift(part);
+  saveParts();
+  resetPartForm();
+  renderParts();
+}
+
+function resetPartForm(){
+  document.getElementById('partId').value='';
+  document.getElementById('partDate').value=todayStr();
+  document.getElementById('partName').value='';
+  document.getElementById('partBrand').value='';
+  document.getElementById('partSupplier').value='';
+  document.getElementById('partQty').value=1;
+  document.getElementById('partBuy').value='';
+  document.getElementById('partSell').value='';
+  document.getElementById('partNote').value='';
+  document.getElementById('partFormTitle').textContent='Yeni Parça Alımı';
+  document.getElementById('partCancelBtn').style.display='none';
+}
+
+function editPart(id){
+  const p = parts.find(x=>x.id===id);
+  if(!p) return;
+  document.getElementById('partId').value=p.id;
+  document.getElementById('partDate').value=p.date;
+  document.getElementById('partName').value=p.name;
+  document.getElementById('partBrand').value=p.brand;
+  document.getElementById('partSupplier').value=p.supplier;
+  document.getElementById('partQty').value=p.qty;
+  document.getElementById('partBuy').value=p.buy;
+  document.getElementById('partSell').value=p.sell;
+  document.getElementById('partNote').value=p.note;
+  document.getElementById('partFormTitle').textContent='Parça Kaydını Düzenle';
+  document.getElementById('partCancelBtn').style.display='inline-flex';
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function deletePart(id){
+  if(!confirm('Bu parça kaydını silmek istediğine emin misin?')) return;
+  parts = parts.filter(p=>p.id!==id);
+  saveParts();
+  renderParts();
+}
+
+function renderParts(){
+  const search = document.getElementById('partSearch').value.trim().toLocaleLowerCase('tr-TR');
+  const body = document.getElementById('partTableBody');
+  const filtered = parts.filter(p=> !search || (p.name+' '+p.brand+' '+p.supplier).toLocaleLowerCase('tr-TR').includes(search));
+  document.getElementById('partEmpty').style.display = filtered.length===0 ? 'block' : 'none';
+  body.innerHTML = filtered.map(p=>`
+    <tr>
+      <td>${escapeHtml(p.name)}</td>
+      <td>${escapeHtml(p.brand)||'-'}</td>
+      <td class="num">${p.qty}</td>
+      <td class="num">${money(p.buy)}</td>
+      <td class="num">${money(p.sell)}</td>
+      <td>
+        <button class="btn small secondary" onclick="editPart('${p.id}')">✎</button>
+        <button class="btn small danger" onclick="deletePart('${p.id}')">✕</button>
+      </td>
+    </tr>
+  `).join('');
+}
+
+// ---- SUMMARY ----
+function renderSummary(){
+  const totalRevenue = jobs.reduce((s,j)=>s+(Number(j.total)||0),0);
+  const totalCollected = jobs.reduce((s,j)=>s+(Number(j.paid)||0),0);
+  const totalDebt = totalRevenue - totalCollected;
+  document.getElementById('statTotalRevenue').textContent = money(totalRevenue);
+  document.getElementById('statTotalCollected').textContent = money(totalCollected);
+  document.getElementById('statTotalDebt').textContent = money(totalDebt);
+  document.getElementById('statJobCount').textContent = jobs.length;
+
+  const debtors = jobs.filter(j=>jobStatus(j)!=='paid').sort((a,b)=> (b.total-b.paid)-(a.total-a.paid));
+  const debtList = document.getElementById('debtList');
+  if(debtors.length===0){
+    debtList.innerHTML = '<div class="empty">Borçlu müşteri yok.</div>';
+  } else {
+    debtList.innerHTML = '<table><thead><tr><th>Müşteri</th><th>Araç</th><th>Kalan Borç</th></tr></thead><tbody>' +
+      debtors.map(j=>`<tr><td>${escapeHtml(j.customer)}</td><td>${escapeHtml(j.vehicle)||'-'}</td><td class="num" style="color:var(--red)">${money((j.total||0)-(j.paid||0))}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
+
+  const stockBuy = parts.reduce((s,p)=>s+(p.buy*p.qty||0),0);
+  const stockSell = parts.reduce((s,p)=>s+(p.sell*p.qty||0),0);
+  document.getElementById('statStockBuyValue').textContent = money(stockBuy);
+  document.getElementById('statStockSellValue').textContent = money(stockSell);
+}
+
+// ---- Backup ----
+function exportData(){
+  const data = {jobs, parts, shopName: shopNameEl.value, exportedAt: new Date().toISOString()};
+  const blob = new Blob([JSON.stringify(data,null,2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'oto-elektrik-yedek-' + todayStr() + '.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function importData(evt){
+  const file = evt.target.files[0];
+  if(!file) return;
+  const reader = new FileReader();
+  reader.onload = e=>{
+    try{
+      const data = JSON.parse(e.target.result);
+      if(!confirm('Mevcut veriler bu yedekle değiştirilecek. Devam edilsin mi?')) return;
+      jobs = Array.isArray(data.jobs) ? data.jobs : [];
+      parts = Array.isArray(data.parts) ? data.parts : [];
+      if(data.shopName){ shopNameEl.value = data.shopName; localStorage.setItem(SHOP_KEY, data.shopName); }
+      saveJobs(); saveParts();
+      renderJobs(); renderParts(); renderSummary();
+      alert('Yedek başarıyla yüklendi.');
+    }catch(err){
+      alert('Dosya okunamadı, geçerli bir yedek dosyası seçtiğinden emin ol.');
+    }
+  };
+  reader.readAsText(file);
+  evt.target.value = '';
+}
+
+function clearAll(){
+  if(!confirm('TÜM işlemler ve parça kayıtları kalıcı olarak silinecek. Emin misin?')) return;
+  if(!confirm('Bu işlem geri alınamaz. Yine de devam edilsin mi?')) return;
+  jobs = []; parts = [];
+  saveJobs(); saveParts();
+  renderJobs(); renderParts(); renderSummary();
+}
+
+// ---- Helpers ----
+function escapeHtml(str){
+  if(!str) return '';
+  return String(str).replace(/[&<>"']/g, m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+}
+function formatDate(d){
+  if(!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}.${m}.${y}`;
+}
+
+renderJobs();
+renderParts();
+renderSummary();
+</script>
+</body>
+</html>
