@@ -157,6 +157,17 @@
   @media(max-width:480px){
     .grid{grid-template-columns:1fr;}
   }
+
+  .toast{
+    position:fixed;left:50%;bottom:24px;transform:translateX(-50%) translateY(16px);
+    background:#20262d;border:1px solid var(--line);color:var(--text);
+    padding:12px 20px;border-radius:10px;font-size:14px;font-weight:600;
+    box-shadow:0 10px 30px rgba(0,0,0,.45);
+    opacity:0;pointer-events:none;transition:opacity .22s ease, transform .22s ease;
+    z-index:200;display:flex;align-items:center;gap:9px;max-width:88vw;
+  }
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+  .toast .dot{width:8px;height:8px;border-radius:50%;background:var(--green);flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -348,6 +359,8 @@
 
 </main>
 
+<div id="toast" class="toast"></div>
+
 <script>
 const JOBS_KEY = 'oto_elektrik_jobs_v1';
 const PARTS_KEY = 'oto_elektrik_parts_v1';
@@ -366,6 +379,19 @@ function money(n){
 }
 function todayStr(){ return new Date().toISOString().slice(0,10); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
+
+let toastTimer;
+function showToast(msg){
+  const el = document.getElementById('toast');
+  el.innerHTML = '<span class="dot"></span><span></span>';
+  el.querySelector('span:last-child').textContent = msg;
+  // restart animation reliably
+  el.classList.remove('show');
+  void el.offsetWidth;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(()=> el.classList.remove('show'), 2000);
+}
 
 // ---- Text formatting helpers ----
 function toTitleCaseTR(str){
@@ -436,6 +462,7 @@ function statusLabel(s){
 function saveJob(){
   const customerRaw = document.getElementById('jobCustomer').value.trim();
   if(!customerRaw){ alert('Müşteri adı gerekli.'); return; }
+  const wasEditing = !!document.getElementById('jobId').value;
   const id = document.getElementById('jobId').value || uid();
   const job = {
     id,
@@ -452,8 +479,10 @@ function saveJob(){
   const idx = jobs.findIndex(j=>j.id===id);
   if(idx>-1) jobs[idx]=job; else jobs.unshift(job);
   saveJobs();
+  if(document.activeElement) document.activeElement.blur();
   resetJobForm();
   renderJobs();
+  showToast(wasEditing ? 'İşlem güncellendi ✓' : (job.customer + ' için işlem kaydedildi ✓'));
 }
 
 function resetJobForm(){
@@ -633,6 +662,7 @@ document.getElementById('partDate').value = todayStr();
 function savePart(){
   const name = document.getElementById('partName').value.trim();
   if(!name){ alert('Parça adı gerekli.'); return; }
+  const wasEditing = !!document.getElementById('partId').value;
   const id = document.getElementById('partId').value || uid();
   const part = {
     id,
@@ -648,8 +678,10 @@ function savePart(){
   const idx = parts.findIndex(p=>p.id===id);
   if(idx>-1) parts[idx]=part; else parts.unshift(part);
   saveParts();
+  if(document.activeElement) document.activeElement.blur();
   resetPartForm();
   renderParts();
+  showToast(wasEditing ? 'Parça güncellendi ✓' : (part.name + ' eklendi ✓'));
 }
 
 function resetPartForm(){
